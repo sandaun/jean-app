@@ -1,4 +1,4 @@
-# jean_test_front
+# Jean Test Mobile
 
 This repository contains instructions for the React Native hiring test, as well as a bootstrapped React Native app with which to start.
 
