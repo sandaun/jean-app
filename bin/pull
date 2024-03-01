@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -euo pipefail
+
+ARG1=${1:-'--pull'}
+
+function cleanup() {
+  for job in $(jobs -p); do
+    kill -9 "$job"
+  done
+}
+
+trap cleanup SIGHUP SIGINT SIGTERM
+
+if [[ "$ARG1" == "--pull" ]]; then
+  branch=$(git branch --show-current)
+
+  if [[ $branch == "main" ]]; then
+    git pull
+  elif git name-rev "@{u}" &>/dev/null; then
+    # Pull only if upstream is configured for current branch
+    git pull --ff-only
+  fi
+fi
+
+(
+  bundle install
+  yarn install
+  cd ios
+  bundle exec pod install --repo-update
+  cd ..
+) &
+
+wait

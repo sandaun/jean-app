@@ -36,6 +36,20 @@ For each feature/tech improvement, we want to understand:
 
 ## What you're working with
 
+### Getting started
+
+```sh
+git clone git@github.com:pennylane-hq/jean_test_mobile.git
+
+cd jean_test_mobile
+
+bin/pull
+
+yarn start
+
+yarn ios
+```
+
 ### Data model
 
 The REST API contains 4 resources: customers, products, invoices & invoice lines.
