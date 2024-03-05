@@ -45,6 +45,9 @@ cd jean_test_mobile
 
 bin/pull
 
+# Make sure to add your token
+cp .env.example .env
+
 yarn start
 
 yarn ios
@@ -66,4 +69,18 @@ An OpenAPI definition for this REST API is avaible [here](https://jean-test-api.
 
 ### API client
 
-TODO
+An API client based on `openapi-client-axios` is available through a React Context set up in `src/api/index.tsx`. The provider is mounted in `src/App.tsx` & the context can be consumed using the `useApi` hook from `src/api/index.tsx`.
+
+```tsx
+const MyComponent = () => {
+  const apiClient = useApi()
+
+  useEffect(() => {
+    apiClient.getInvoices().then(res => {
+      // Do something...
+    })
+  }, [apiClient])
+
+  return null
+}
+```

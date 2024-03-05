@@ -8,4 +8,7 @@ module.exports = {
     'react-native/react-native': true,
   },
   extends: ['@react-native', 'prettier'],
+  rules: {
+    'react/react-in-jsx-scope': 'off',
+  },
 }
