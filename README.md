@@ -36,6 +36,8 @@ For each feature/tech improvement, we want to understand:
 
 ## What you're working with
 
+Please note that we rely on [`asdf`](https://github.com/asdf-vm/asdf) to manage Ruby/Node/Yarn versions. Feel free to use something else & have a look at `.tool-versions` if you run in any trouble.
+
 ### Getting started
 
 ```sh
@@ -45,7 +47,7 @@ cd jean_test_mobile
 
 bin/pull
 
-# Make sure to add your token
+# Make sure to add your token (sent by email)
 cp .env.example .env
 
 yarn start
