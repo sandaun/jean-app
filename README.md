@@ -18,7 +18,7 @@ This prototype allows users to perform simple actions around their invoices:
   - Delete invoices
 
 We do not expect the prototype to be feature-rich as we'll mainly focus on code quality, performance & user experience.
-We expect you to adopt standard coding practices & setup as if you were working on a real application with other coworkers.
+We expect you to adopt standard coding practices & setup, including testing, as if you were working on a real application with other coworkers.
 
 Feel free to use pre-installed dependencies or add new ones if you have a legitimate use of them.
 
