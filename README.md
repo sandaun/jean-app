@@ -67,7 +67,9 @@ Side notes:
 The REST API base URL is `https://jean-test-api.herokuapp.com/`.
 Each API call must be authenticated using a `X-SESSION` header with the provided token.
 
-An OpenAPI definition for this REST API is avaible [here](https://jean-test-api.herokuapp.com/api-docs/index.html)
+An OpenAPI definition for this REST API is avaible [here](https://jean-test-api.herokuapp.com/api-docs/index.html).
+
+The invoices list endpoint supports a `filter` query param which can be used as described in [our external API documentation](https://pennylane.readme.io/docs/how-to-set-up-filters).
 
 ### API client
 
