@@ -32,7 +32,7 @@ For each feature/tech improvement, we want to understand:
 ### Deliverable
 
 - Create a private GitHub repository containing the source code of your application
-- Invite the following GitHub users to it: `@quentindemetz` `@tdeo` `@jibinjosepez` `@jsiny` `@soyoh` `@LucaGaspa` `@greeeg`
+- Invite the following GitHub users to it: `@julienpinquie` `@soyoh` `@LucaGaspa` `@greeeg` 
 
 ## What you're working with
 
