@@ -13,16 +13,15 @@ import { Paths } from '../api/generated/client'
 type FetchCustomersResponse =
   Paths.GetSearchCustomers.Responses.$200['customers']
 
-const DEBOUNCE_DELAY = 300 // Retard per al debouncing (en mil·lisegons)
+const DEBOUNCE_DELAY = 300
 
 const SearchCustomers = ({ onSelect }: { onSelect: (id: number) => void }) => {
   const [query, setQuery] = useState('')
-  const [allCustomers, setAllCustomers] = useState<FetchCustomersResponse>([]) // Tots els clients
+  const [allCustomers, setAllCustomers] = useState<FetchCustomersResponse>([])
   const [filteredCustomers, setFilteredCustomers] =
-    useState<FetchCustomersResponse>([]) // Resultats filtrats
+    useState<FetchCustomersResponse>([])
   const api = useApi()
 
-  // Crida inicial per obtenir tota la llista de clients
   useEffect(() => {
     const fetchAllCustomers = async () => {
       try {
@@ -38,33 +37,31 @@ const SearchCustomers = ({ onSelect }: { onSelect: (id: number) => void }) => {
     fetchAllCustomers()
   }, [api])
 
-  // Actualitzar els resultats després d'un retard amb debouncing
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (query.length > 0) {
+      if (query.length >= 1) {
         const lowerText = query.toLowerCase()
         const filtered = allCustomers.filter(
           (customer) =>
-            customer.first_name.toLowerCase().includes(lowerText) ||
-            customer.last_name.toLowerCase().includes(lowerText),
+            customer.first_name.toLowerCase().startsWith(lowerText) ||
+            customer.last_name.toLowerCase().startsWith(lowerText),
         )
-        setFilteredCustomers(filtered.slice(0, 30)) // Mostrem només els primers 30 resultats
+        setFilteredCustomers(filtered.slice(0, 30))
       } else {
-        setFilteredCustomers([]) // Buidem la llista si no hi ha text
+        setFilteredCustomers([])
       }
     }, DEBOUNCE_DELAY)
 
-    return () => clearTimeout(timeout) // Neteja el timeout si l'usuari escriu de nou
+    return () => clearTimeout(timeout)
   }, [query, allCustomers])
 
   const handleSelectCustomer = (customer: FetchCustomersResponse[0]) => {
-    setQuery(`${customer.first_name} ${customer.last_name}`) // Actualitzem el valor al TextInput
-    onSelect(customer.id) // Notifiquem al component pare
-    setFilteredCustomers([]) // Netegem la llista de resultats
+    setQuery(`${customer.first_name} ${customer.last_name}`)
+    onSelect(customer.id)
+    setFilteredCustomers([])
   }
 
   const isQueryMatchingCustomer = () => {
-    // Verifica si el `query` coincideix exactament amb el nom complet d'un client
     return allCustomers.some(
       (customer) =>
         `${customer.first_name} ${customer.last_name}`.toLowerCase() ===

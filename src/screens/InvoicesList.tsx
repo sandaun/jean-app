@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   FlatList,
   Text,
@@ -11,11 +11,12 @@ import {
   Alert,
   Switch,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native'
 import { useApi } from '../api'
-import { Paths } from '../api/generated/client'
+import { Components, Paths } from '../api/generated/client'
 import SearchCustomers from '../components/SearchCustomers'
-import { Dropdown } from 'react-native-element-dropdown'
+import SearchProducts from '../components/SearchProducts'
 
 type FetchInvoicesResponse = Paths.GetInvoices.Responses.$200
 
@@ -29,28 +30,54 @@ const InvoicesList = () => {
   >(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [modalVisible, setModalVisible] = useState(false)
-  const [newInvoice, setNewInvoice] = useState({
-    customer_id: 0,
-    date: '',
-    deadline: '',
-    paid: false,
-    finalized: false,
-    invoice_lines_attributes: [],
-  })
-  const [newItem, setNewItem] = useState({
-    product_id: '',
-    label: '',
-    quantity: 1,
-    unit: '',
-    vat_rate: '',
-    price: '',
-    tax: '',
-  })
+  const [allProducts, setAllProducts] = useState<Components.Schemas.Product[]>(
+    [],
+  )
+
+  const searchProductsRef = useRef<{ clearSelection: () => void }>(null)
+
+  const fetchProducts = async () => {
+    try {
+      const { data } = await api.getSearchProducts({
+        query: '',
+        per_page: 1000,
+      })
+      setAllProducts(data.products)
+    } catch (error) {
+      console.error('Error fetching products:', error)
+    }
+  }
+
+  const [newInvoice, setNewInvoice] =
+    useState<Components.Schemas.InvoiceCreatePayload>({
+      customer_id: 0,
+      date: new Date().toISOString().split('T')[0],
+      deadline: '',
+      paid: false,
+      finalized: false,
+      invoice_lines_attributes: [],
+    })
+
+  const [newItem, setNewItem] =
+    useState<Components.Schemas.InvoiceLineCreatePayload>({
+      product_id: 0,
+      label: '',
+      quantity: 1,
+      unit: undefined,
+      vat_rate: undefined,
+      price: '',
+      tax: '',
+    })
+
   const api = useApi()
 
   useEffect(() => {
     fetchInvoices()
   }, [currentPage])
+
+  useEffect(() => {
+    fetchProducts()
+  }, [])
 
   const fetchInvoices = async () => {
     setLoading(true)
@@ -77,28 +104,50 @@ const InvoicesList = () => {
       finalized: false,
       invoice_lines_attributes: [],
     })
+    setNewItem({
+      product_id: 0,
+      label: '',
+      quantity: 1,
+      unit: undefined,
+      vat_rate: undefined,
+      price: '',
+      tax: '',
+    })
     setModalVisible(true)
   }
 
   const handleAddItem = () => {
-    // Afegir el nou item a la llista d'items
+    if (!newItem.label) {
+      Alert.alert('Error', 'Please select a product before adding.')
+      return
+    }
+
+    if (!newItem.quantity || newItem.quantity <= 0) {
+      Alert.alert('Error', 'Please enter a valid quantity.')
+      return
+    }
+
+    // Si tot és correcte, afegim l'article
     setNewInvoice((prevInvoice) => ({
       ...prevInvoice,
       invoice_lines_attributes: [
-        ...prevInvoice.invoice_lines_attributes,
+        ...(prevInvoice.invoice_lines_attributes || []),
         newItem,
       ],
     }))
-    // Buidem els camps del nou item
+
+    // Aquí esborrem la selecció i el `newItem` només després d'afegir correctament
     setNewItem({
-      product_id: '',
+      product_id: 0,
       label: '',
       quantity: 1,
-      unit: '',
-      vat_rate: '',
+      unit: undefined,
+      vat_rate: undefined,
       price: '',
       tax: '',
     })
+
+    searchProductsRef.current?.clearSelection()
   }
 
   const handleCreateInvoice = async () => {
@@ -122,19 +171,6 @@ const InvoicesList = () => {
       Alert.alert('Error', 'Failed to create invoice.')
     }
   }
-
-  const unitOptions = [
-    { label: 'Hour', value: 'hour' },
-    { label: 'Day', value: 'day' },
-    { label: 'Piece', value: 'piece' },
-  ]
-
-  const vatRateOptions = [
-    { label: '0%', value: '0' },
-    { label: '5.5%', value: '5.5' },
-    { label: '10%', value: '10' },
-    { label: '20%', value: '20' },
-  ]
 
   return (
     <View style={styles.container}>
@@ -180,10 +216,9 @@ const InvoicesList = () => {
       {/* Modal per crear factura */}
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
-          <View style={styles.scrollViewWrapper}>
+          <View style={styles.contentWrapper}>
             <View
               style={{
-                backgroundColor: 'orange',
                 marginHorizontal: 20,
                 marginTop: 20,
                 flex: 1,
@@ -198,7 +233,7 @@ const InvoicesList = () => {
               <TextInput
                 style={styles.input}
                 placeholder="Deadline (YYYY-MM-DD)"
-                value={newInvoice.deadline}
+                value={newInvoice.deadline || ''}
                 onChangeText={(text) =>
                   setNewInvoice({ ...newInvoice, deadline: text })
                 }
@@ -225,98 +260,58 @@ const InvoicesList = () => {
               </View>
               {/* Camps per afegir items */}
               <Text style={styles.subtitle}>Add Items</Text>
-              <View style={styles.row}>
-                <TextInput
-                  style={[styles.input, styles.rowItem]}
-                  placeholder="Product ID"
-                  value={newItem.product_id}
-                  onChangeText={(text) =>
-                    setNewItem({ ...newItem, product_id: text })
-                  }
-                />
-                <TextInput
-                  style={[styles.input, styles.rowItem]}
-                  placeholder="Label"
-                  value={newItem.label}
-                  onChangeText={(text) =>
-                    setNewItem({ ...newItem, label: text })
-                  }
-                />
+
+              <View style={[styles.row]}>
+                <View style={styles.searchProductsInputContainer}>
+                  <SearchProducts
+                    ref={searchProductsRef}
+                    onSelect={(productId) => {
+                      const selectedProduct = allProducts.find(
+                        (p) => p.id === productId,
+                      )
+                      if (selectedProduct) {
+                        setNewItem({
+                          product_id: selectedProduct.id,
+                          label: selectedProduct.label,
+                          quantity: 1,
+                          unit: selectedProduct.unit,
+                          vat_rate: selectedProduct.vat_rate,
+                          price: parseFloat(selectedProduct.unit_price),
+                          tax: parseFloat(selectedProduct.unit_tax),
+                        })
+                      }
+                    }}
+                  />
+                </View>
+                <View style={styles.quantityInputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Quantity"
+                    keyboardType="numeric"
+                    value={newItem.quantity?.toString() || ''}
+                    onChangeText={(text) =>
+                      setNewItem({
+                        ...newItem,
+                        quantity: text === '' ? undefined : Number(text), // Permet valor buit temporalment
+                      })
+                    }
+                  />
+                </View>
               </View>
-              {/* Quantitat, Preu i Total a la mateixa fila */}
-              <View style={styles.row}>
-                <TextInput
-                  style={[styles.input, styles.rowItem]}
-                  placeholder="Quantity"
-                  keyboardType="numeric"
-                  value={String(newItem.quantity)}
-                  onChangeText={(text) =>
-                    setNewItem({ ...newItem, quantity: parseInt(text) || 1 })
-                  }
-                />
-                <TextInput
-                  style={[styles.input, styles.rowItem]}
-                  placeholder="Price"
-                  keyboardType="numeric"
-                  value={String(newItem.price)}
-                  onChangeText={(text) =>
-                    setNewItem({ ...newItem, price: parseFloat(text) || 0 })
-                  }
-                />
-                <TextInput
-                  style={[
-                    styles.input,
-                    styles.rowItem,
-                    { backgroundColor: '#f0f0f0' },
-                  ]}
-                  editable={false}
-                  value={String(newItem.quantity * newItem.price || 0)}
-                  placeholder="Total"
-                />
-              </View>
-              {/* Dropdowns */}
-              <View style={styles.row}>
-                <Dropdown
-                  style={[styles.input, styles.rowItem]}
-                  data={unitOptions}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Sel. Unit"
-                  value={newItem.unit}
-                  onChange={(item) =>
-                    setNewItem({ ...newItem, unit: item.value })
-                  }
-                />
-                <Dropdown
-                  style={[styles.input, styles.rowItem]}
-                  data={vatRateOptions}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Sel. VAT Rate"
-                  value={newItem.vat_rate}
-                  onChange={(item) =>
-                    setNewItem({ ...newItem, vat_rate: item.value })
-                  }
-                />
-              </View>
-              <TextInput
-                style={[styles.input, styles.rowItem]}
-                placeholder="Tax"
-                keyboardType="numeric"
-                value={String(newItem.tax)}
-                onChangeText={(text) =>
-                  setNewItem({ ...newItem, tax: parseFloat(text) || 0 })
-                }
-              />
-              <Button title="Add Item" onPress={handleAddItem} />
+              <TouchableOpacity
+                onPress={handleAddItem}
+                style={styles.addItemButton}
+              >
+                <Text>Add Item</Text>
+              </TouchableOpacity>
 
               {/* Mostra items afegits */}
               <ScrollView style={{ height: 120 }}>
                 {newInvoice.invoice_lines_attributes.map((item, index) => (
                   <View key={index} style={styles.itemRow}>
                     <Text style={styles.itemText}>
-                      {item.product_id} - {item.label} (x{item.quantity}) -
-                      Total: ${item.quantity * item.price || 0}
+                      {item.product_id} - {item.label} (x{item.quantity || 1}) -
+                      Total: ${(item.quantity || 1) * (item.price || 0)}
                     </Text>
                     <Button
                       title="Delete"
@@ -358,7 +353,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
   },
-  scrollViewWrapper: {
+  contentWrapper: {
     backgroundColor: 'white',
     marginHorizontal: 20,
     borderRadius: 8,
@@ -398,6 +393,14 @@ const styles = StyleSheet.create({
   },
   checkbox: { flexDirection: 'row', alignItems: 'center' },
   modalActions: { flexDirection: 'row', justifyContent: 'space-around' },
+  searchProductsInputContainer: {
+    flex: 1,
+    marginRight: 8,
+  },
+  quantityInputContainer: {
+    width: '20%',
+  },
+  addItemButton: { zIndex: -1 },
 })
 
 export default InvoicesList
