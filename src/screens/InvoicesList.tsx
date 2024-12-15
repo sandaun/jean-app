@@ -213,34 +213,39 @@ const InvoicesList = () => {
         </>
       )}
 
-      {/* Modal per crear factura */}
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
-          <View style={styles.contentWrapper}>
-            <View
-              style={{
-                marginHorizontal: 20,
-                marginTop: 20,
-                flex: 1,
-              }}
-            >
+          <View style={styles.modalContentWrapper}>
+            <View style={styles.modalContent}>
+              {/* Títol del modal */}
               <Text style={styles.modalTitle}>Create Invoice</Text>
-              <SearchCustomers
-                onSelect={(id) =>
-                  setNewInvoice({ ...newInvoice, customer_id: id })
-                }
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Deadline (YYYY-MM-DD)"
-                value={newInvoice.deadline || ''}
-                onChangeText={(text) =>
-                  setNewInvoice({ ...newInvoice, deadline: text })
-                }
-              />
-              <View style={styles.checkboxContainer}>
-                <View style={styles.checkbox}>
-                  <Text>Paid</Text>
+
+              {/* Client i data de venciment */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Customer</Text>
+                <SearchCustomers
+                  onSelect={(id) =>
+                    setNewInvoice({ ...newInvoice, customer_id: id })
+                  }
+                />
+              </View>
+
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Deadline</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Deadline (YYYY-MM-DD)"
+                  value={newInvoice.deadline || ''}
+                  onChangeText={(text) =>
+                    setNewInvoice({ ...newInvoice, deadline: text })
+                  }
+                />
+              </View>
+
+              {/* Switches Paid i Finalized */}
+              <View style={styles.switchContainer}>
+                <View style={styles.switchRow}>
+                  <Text style={styles.switchLabel}>Paid</Text>
                   <Switch
                     value={newInvoice.paid}
                     onValueChange={(value) =>
@@ -248,8 +253,8 @@ const InvoicesList = () => {
                     }
                   />
                 </View>
-                <View style={styles.checkbox}>
-                  <Text>Finalized</Text>
+                <View style={styles.switchRow}>
+                  <Text style={styles.switchLabel}>Finalized</Text>
                   <Switch
                     value={newInvoice.finalized}
                     onValueChange={(value) =>
@@ -258,64 +263,64 @@ const InvoicesList = () => {
                   />
                 </View>
               </View>
-              {/* Camps per afegir items */}
-              <Text style={styles.subtitle}>Add Items</Text>
 
-              <View style={[styles.row]}>
-                <View style={styles.searchProductsInputContainer}>
-                  <SearchProducts
-                    ref={searchProductsRef}
-                    onSelect={(productId) => {
-                      const selectedProduct = allProducts.find(
-                        (p) => p.id === productId,
-                      )
-                      if (selectedProduct) {
+              {/* Afegir producte i quantitat */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Add Items</Text>
+                <View style={styles.row}>
+                  <View style={styles.searchProductsInputContainer}>
+                    <SearchProducts
+                      ref={searchProductsRef}
+                      onSelect={(productId) => {
+                        const selectedProduct = allProducts.find(
+                          (p) => p.id === productId,
+                        )
+                        if (selectedProduct) {
+                          setNewItem({
+                            product_id: selectedProduct.id,
+                            label: selectedProduct.label,
+                            quantity: 1,
+                            unit: selectedProduct.unit,
+                            vat_rate: selectedProduct.vat_rate,
+                            price: parseFloat(selectedProduct.unit_price),
+                            tax: parseFloat(selectedProduct.unit_tax),
+                          })
+                        }
+                      }}
+                    />
+                  </View>
+                  <View style={styles.quantityInputContainer}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Qty"
+                      keyboardType="numeric"
+                      value={newItem.quantity?.toString() || ''}
+                      onChangeText={(text) =>
                         setNewItem({
-                          product_id: selectedProduct.id,
-                          label: selectedProduct.label,
-                          quantity: 1,
-                          unit: selectedProduct.unit,
-                          vat_rate: selectedProduct.vat_rate,
-                          price: parseFloat(selectedProduct.unit_price),
-                          tax: parseFloat(selectedProduct.unit_tax),
+                          ...newItem,
+                          quantity: text === '' ? undefined : Number(text),
                         })
                       }
-                    }}
-                  />
+                    />
+                  </View>
                 </View>
-                <View style={styles.quantityInputContainer}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Quantity"
-                    keyboardType="numeric"
-                    value={newItem.quantity?.toString() || ''}
-                    onChangeText={(text) =>
-                      setNewItem({
-                        ...newItem,
-                        quantity: text === '' ? undefined : Number(text), // Permet valor buit temporalment
-                      })
-                    }
-                  />
-                </View>
+                <TouchableOpacity
+                  onPress={handleAddItem}
+                  style={styles.addButton}
+                >
+                  <Text style={styles.addButtonText}>Add Item</Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                onPress={handleAddItem}
-                style={styles.addItemButton}
-              >
-                <Text>Add Item</Text>
-              </TouchableOpacity>
 
-              {/* Mostra items afegits */}
-              <ScrollView style={{ height: 120 }}>
+              {/* Llista d'items */}
+              <ScrollView style={styles.itemsList}>
                 {newInvoice.invoice_lines_attributes.map((item, index) => (
                   <View key={index} style={styles.itemRow}>
                     <Text style={styles.itemText}>
                       {item.product_id} - {item.label} (x{item.quantity || 1}) -
                       Total: ${(item.quantity || 1) * (item.price || 0)}
                     </Text>
-                    <Button
-                      title="Delete"
-                      color="red"
+                    <TouchableOpacity
                       onPress={() => {
                         const updatedItems =
                           newInvoice.invoice_lines_attributes.filter(
@@ -326,14 +331,28 @@ const InvoicesList = () => {
                           invoice_lines_attributes: updatedItems,
                         }))
                       }}
-                    />
+                    >
+                      <Text style={styles.deleteText}>Delete</Text>
+                    </TouchableOpacity>
                   </View>
                 ))}
               </ScrollView>
-            </View>
-            <View style={styles.modalActions}>
-              <Button title="Save" onPress={handleCreateInvoice} />
-              <Button title="Cancel" onPress={() => setModalVisible(false)} />
+
+              {/* Botons d'acció */}
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  onPress={handleCreateInvoice}
+                  style={styles.saveButton}
+                >
+                  <Text style={styles.buttonText}>Save</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setModalVisible(false)}
+                  style={styles.cancelButton}
+                >
+                  <Text style={styles.buttonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>
@@ -353,54 +372,119 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
   },
-  contentWrapper: {
+  modalContentWrapper: {
     backgroundColor: 'white',
     marginHorizontal: 20,
     borderRadius: 8,
     height: 650,
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  rowItem: {
+  modalContent: {
+    marginHorizontal: 20,
+    marginTop: 20,
     flex: 1,
-    marginHorizontal: 4,
   },
-  itemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: '#1D3557',
   },
-  itemText: {
-    flex: 1,
-    marginRight: 8,
+  section: {
+    marginBottom: 16,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 10,
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
     marginBottom: 8,
+    color: '#1D3557',
   },
-  checkboxContainer: {
+  switchContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 16,
   },
-  checkbox: { flexDirection: 'row', alignItems: 'center' },
-  modalActions: { flexDirection: 'row', justifyContent: 'space-around' },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  switchLabel: {
+    marginRight: 8,
+    fontSize: 16,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    zIndex: 1,
+  },
   searchProductsInputContainer: {
     flex: 1,
     marginRight: 8,
   },
   quantityInputContainer: {
-    width: '20%',
+    width: '25%',
   },
-  addItemButton: { zIndex: -1 },
+  input: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    padding: 10,
+    backgroundColor: '#FFF',
+  },
+  addButton: {
+    backgroundColor: '#457B9D',
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  addButtonText: {
+    color: '#FFF',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  itemsList: {
+    maxHeight: 150,
+    marginBottom: 16,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  itemText: {
+    color: '#333',
+  },
+  deleteText: {
+    color: '#E63946',
+    fontWeight: '600',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 12,
+  },
+  saveButton: {
+    backgroundColor: '#457B9D',
+    borderRadius: 8,
+    paddingVertical: 12,
+    width: '45%',
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#E63946',
+    borderRadius: 8,
+    paddingVertical: 12,
+    width: '45%',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#FFF',
+    fontWeight: '600',
+    fontSize: 16,
+  },
 })
 
 export default InvoicesList

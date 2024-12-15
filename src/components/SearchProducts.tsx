@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     right: 0,
     left: 0,
     top: 50,
-    backgroundColor: 'red',
+    backgroundColor: 'white',
   },
   list: {
     maxHeight: 200,
