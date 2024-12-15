@@ -19,8 +19,16 @@ import { Components, Paths } from '../api/generated/client'
 import SearchCustomers from '../components/SearchCustomers'
 import SearchProducts from '../components/SearchProducts'
 import { isOverdue, formatToEuro } from '../utils/utils'
+import { useNavigation } from '@react-navigation/native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { RootStackParamList } from '../navigation/AppNavigator'
 
 type FetchInvoicesResponse = Paths.GetInvoices.Responses.$200
+
+type InvoicesListNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'InvoicesList'
+>
 
 const InvoicesList = () => {
   const [invoices, setInvoices] = useState<FetchInvoicesResponse['invoices']>(
@@ -35,6 +43,8 @@ const InvoicesList = () => {
   const [allProducts, setAllProducts] = useState<Components.Schemas.Product[]>(
     [],
   )
+
+  const navigation = useNavigation<InvoicesListNavigationProp>()
 
   const searchProductsRef = useRef<{ clearSelection: () => void }>(null)
 
@@ -161,8 +171,6 @@ const InvoicesList = () => {
       return
     }
 
-    console.log('Creating invoice:', newInvoice)
-
     try {
       await api.postInvoices({}, { invoice: { ...newInvoice } })
       Alert.alert('Success', 'Invoice created successfully!')
@@ -191,42 +199,53 @@ const InvoicesList = () => {
               data={invoices}
               keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => (
-                <View style={styles.invoiceItem}>
-                  <View style={styles.invoiceItemNameContainer}>
-                    <Text style={styles.invoiceItemName}>
-                      {item.customer?.first_name} {item.customer?.last_name}
-                    </Text>
-                    <Text style={styles.invoiceItemDate}>
-                      Date: {item.date}
-                    </Text>
-                  </View>
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate('InvoiceDetail', { invoiceId: item.id })
+                  }
+                >
+                  <View style={styles.invoiceItem}>
+                    <View style={styles.invoiceItemNameContainer}>
+                      <Text style={styles.invoiceItemName}>
+                        {item.customer?.first_name} {item.customer?.last_name}
+                      </Text>
+                      <Text style={styles.invoiceItemDate}>
+                        Invoice #{item.id}
+                      </Text>
+                      <Text style={styles.invoiceItemDate}>
+                        Date: {item.date}
+                      </Text>
+                    </View>
 
-                  {/* Informació a la dreta */}
-                  <View style={styles.invoiceItemTotalContainer}>
-                    <Text style={styles.invoiceItemTotal}>
-                      {formatToEuro(item.total)}
-                    </Text>
+                    {/* Informació a la dreta */}
+                    <View style={styles.invoiceItemTotalContainer}>
+                      <Text style={styles.invoiceItemTotal}>
+                        {formatToEuro(item.total)}
+                      </Text>
 
-                    {/* Estat de l'Invoice */}
-                    <View style={styles.pillsContainer}>
-                      {item.paid && (
-                        <Text style={[styles.pill, styles.pillPaid]}>Paid</Text>
-                      )}
-                      {!item.paid && isOverdue(item.date, item.deadline) && (
-                        <Text style={[styles.pill, styles.pillOverdue]}>
-                          Overdue
-                        </Text>
-                      )}
-                      {item.finalized &&
-                        !isOverdue(item.date, item.deadline) &&
-                        !item.paid && (
-                          <Text style={[styles.pill, styles.pillFinalized]}>
-                            Finalized
+                      {/* Estat de l'Invoice */}
+                      <View style={styles.pillsContainer}>
+                        {item.paid && (
+                          <Text style={[styles.pill, styles.pillPaid]}>
+                            Paid
                           </Text>
                         )}
+                        {!item.paid && isOverdue(item.date, item.deadline) && (
+                          <Text style={[styles.pill, styles.pillOverdue]}>
+                            Overdue
+                          </Text>
+                        )}
+                        {item.finalized &&
+                          !isOverdue(item.date, item.deadline) &&
+                          !item.paid && (
+                            <Text style={[styles.pill, styles.pillFinalized]}>
+                              Finalized
+                            </Text>
+                          )}
+                      </View>
                     </View>
                   </View>
-                </View>
+                </TouchableOpacity>
               )}
             />
             <View style={styles.pagination}>
@@ -478,7 +497,7 @@ const styles = StyleSheet.create({
   },
   invoiceItemNameContainer: {
     flex: 1,
-    height: 50,
+    height: 55,
     justifyContent: 'space-between',
   },
   invoiceItemName: {
@@ -492,7 +511,7 @@ const styles = StyleSheet.create({
   },
   invoiceItemTotalContainer: {
     alignItems: 'flex-end',
-    height: 50,
+    height: 55,
     justifyContent: 'space-between',
   },
   invoiceItemTotal: {
