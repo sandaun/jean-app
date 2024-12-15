@@ -12,7 +12,7 @@ const AppNavigator = () => {
         <Stack.Screen
           name="InvoicesList"
           component={InvoicesList}
-          options={{ title: 'Invoices' }}
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>
