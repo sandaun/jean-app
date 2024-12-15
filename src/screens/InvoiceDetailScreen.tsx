@@ -15,6 +15,7 @@ import { Components } from '../api/generated/client'
 import { RouteProp } from '@react-navigation/native'
 import { RootStackParamList } from '../navigation/AppNavigator'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import Header from '../components/Header'
 
 type InvoiceDetailScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -111,15 +112,12 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <View style={styles.headerContainer}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.addButton}
-          >
-            <Text style={styles.addButtonText}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Invoice #{invoice.id}</Text>
-        </View>
+        <Header
+          title={`Invoice #${invoice.id}`}
+          buttonPosition="left"
+          buttonSymbol="←"
+          onButtonPress={() => navigation.goBack()}
+        />
         <ScrollView
         // contentContainerStyle={styles.container
         >
@@ -192,39 +190,39 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
   },
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-    paddingHorizontal: 16,
-    backgroundColor: '#e2e2e2',
-    paddingVertical: 10,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1D3557',
-  },
-  addButton: {
-    backgroundColor: '#457B9D',
-    borderRadius: 50,
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addButtonText: {
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
+  // headerContainer: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   justifyContent: 'space-between',
+  //   marginBottom: 16,
+  //   paddingHorizontal: 16,
+  //   backgroundColor: '#e2e2e2',
+  //   paddingVertical: 10,
+  //   borderRadius: 8,
+  //   shadowColor: '#000',
+  //   shadowOffset: { width: 0, height: 2 },
+  //   shadowOpacity: 0.25,
+  //   shadowRadius: 4,
+  //   elevation: 3,
+  // },
+  // headerTitle: {
+  //   fontSize: 24,
+  //   fontWeight: 'bold',
+  //   color: '#1D3557',
+  // },
+  // addButton: {
+  //   backgroundColor: '#457B9D',
+  //   borderRadius: 50,
+  //   width: 40,
+  //   height: 40,
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  // },
+  // addButtonText: {
+  //   color: '#FFF',
+  //   fontSize: 20,
+  //   fontWeight: 'bold',
+  // },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
