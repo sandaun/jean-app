@@ -17,6 +17,7 @@ import { useApi } from '../api'
 import { Components, Paths } from '../api/generated/client'
 import SearchCustomers from '../components/SearchCustomers'
 import SearchProducts from '../components/SearchProducts'
+import { isOverdue, formatToEuro } from '../utils/utils'
 
 type FetchInvoicesResponse = Paths.GetInvoices.Responses.$200
 
@@ -185,30 +186,59 @@ const InvoicesList = () => {
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <View style={styles.invoiceItem}>
-                <Text>
-                  {item.customer?.first_name} {item.customer?.last_name}
-                </Text>
-                <Text>Total: ${item.total}</Text>
-                <Text>Date: {item.date}</Text>
-                <Text>Finalized: {item.finalized ? 'Yes' : 'No'}</Text>
-                <Text>Paid: {item.paid ? 'Yes' : 'No'}</Text>
+                <View style={styles.invoiceItemNameContainer}>
+                  <Text style={styles.invoiceItemName}>
+                    {item.customer?.first_name} {item.customer?.last_name}
+                  </Text>
+                  <Text style={styles.invoiceItemDate}>Date: {item.date}</Text>
+                </View>
+
+                {/* Informació a la dreta */}
+                <View style={styles.invoiceItemTotalContainer}>
+                  <Text style={styles.invoiceItemTotal}>
+                    {formatToEuro(item.total)}
+                  </Text>
+
+                  {/* Estat de l'Invoice */}
+                  <View style={styles.pillsContainer}>
+                    {item.paid && (
+                      <Text style={[styles.pill, styles.pillPaid]}>Paid</Text>
+                    )}
+                    {!item.paid && isOverdue(item.date, item.deadline) && (
+                      <Text style={[styles.pill, styles.pillOverdue]}>
+                        Overdue
+                      </Text>
+                    )}
+                    {item.finalized &&
+                      !isOverdue(item.date, item.deadline) &&
+                      !item.paid && (
+                        <Text style={[styles.pill, styles.pillFinalized]}>
+                          Finalized
+                        </Text>
+                      )}
+                  </View>
+                </View>
               </View>
             )}
           />
           <View style={styles.pagination}>
-            <Button
-              title="Previous"
+            <TouchableOpacity
+              style={styles.paginationButton}
               onPress={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={pagination?.page === 1}
-            />
-            <Text>
+            >
+              <Text style={styles.paginationButtonText}>Previous</Text>
+            </TouchableOpacity>
+            <Text style={styles.paginationText}>
               Page {pagination?.page} of {pagination?.total_pages}
             </Text>
-            <Button
-              title="Next"
+            <TouchableOpacity
+              style={styles.paginationButton}
               onPress={() => setCurrentPage((prev) => prev + 1)}
               disabled={pagination?.page === pagination?.total_pages}
-            />
+            >
+              <Text style={styles.paginationButtonText}>Next</Text>
+            </TouchableOpacity>
           </View>
         </>
       )}
@@ -362,11 +392,100 @@ const InvoicesList = () => {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
-  subtitle: { fontSize: 18, fontWeight: 'bold', marginTop: 16 },
-  invoiceItem: { padding: 16, marginBottom: 12, backgroundColor: '#ffffff' },
-  pagination: { flexDirection: 'row', justifyContent: 'space-between' },
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: 'white',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1D3557',
+    marginBottom: 12,
+  },
+  pagination: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#A8DADC',
+  },
+  paginationText: {
+    fontSize: 14,
+    color: '#457B9D',
+  },
+  paginationButton: {
+    backgroundColor: '#457B9D',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  paginationButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  invoiceItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    marginBottom: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  invoiceItemNameContainer: {
+    flex: 1,
+    height: 50,
+    justifyContent: 'space-between',
+  },
+  invoiceItemName: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#1D3557',
+  },
+  invoiceItemDate: {
+    fontSize: 14,
+    color: '#6C757D',
+  },
+  invoiceItemTotalContainer: {
+    alignItems: 'flex-end',
+    height: 50,
+    justifyContent: 'space-between',
+  },
+  invoiceItemTotal: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#6C757D',
+  },
+  pillsContainer: {
+    flexDirection: 'row',
+    marginTop: 4,
+  },
+  pill: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    overflow: 'hidden',
+    fontSize: 12,
+    fontWeight: '600',
+    marginRight: 4,
+    textAlign: 'center',
+  },
+  pillOverdue: {
+    backgroundColor: '#FDEBD0',
+    color: '#E67E22',
+  },
+  pillPaid: {
+    backgroundColor: '#D4EFDF',
+    color: '#28B463',
+  },
+  pillFinalized: {
+    backgroundColor: '#E8F6F3',
+    color: '#1F618D',
+  },
   modalContainer: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
