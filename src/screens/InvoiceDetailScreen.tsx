@@ -16,6 +16,9 @@ import { RouteProp } from '@react-navigation/native'
 import { RootStackParamList } from '../navigation/AppNavigator'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import Header from '../components/Header'
+import DetailRow from '../components/DetailRow'
+import StatusPills from '../components/StatusPills'
+import ItemRow from '../components/ItemRow'
 
 type InvoiceDetailScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -109,6 +112,8 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
     return null
   }
 
+  console.log(12, invoice.invoice_lines[0])
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -118,57 +123,63 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
           buttonSymbol="←"
           onButtonPress={() => navigation.goBack()}
         />
-        <ScrollView
-        // contentContainerStyle={styles.container
-        >
-          <View style={styles.details}>
-            <Text style={styles.label}>Customer:</Text>
-            <Text style={styles.value}>
-              {invoice.customer?.first_name} {invoice.customer?.last_name}
-            </Text>
+        <Text style={styles.sectionTitle}>Invoice Details</Text>
+        <View style={styles.details}>
+          <DetailRow
+            label1="Customer"
+            value1={`${invoice.customer?.first_name} ${invoice.customer?.last_name}`}
+            children2={
+              <StatusPills
+                {...invoice}
+                date={invoice.date}
+                deadline={invoice.deadline}
+              />
+            }
+          />
+          <DetailRow
+            label1="Date"
+            value1={invoice.date}
+            label2="Deadline"
+            value2={invoice.deadline}
+          />
+          <DetailRow
+            label1="Total"
+            value1={formatToEuro(invoice.total)}
+            label2="Tax"
+            value2={formatToEuro(invoice.tax)}
+          />
+        </View>
 
-            <Text style={styles.label}>Date:</Text>
-            <Text style={styles.value}>{invoice.date}</Text>
-
-            <Text style={styles.label}>Deadline:</Text>
-            <Text style={styles.value}>{invoice.deadline}</Text>
-
-            <Text style={styles.label}>Total:</Text>
-            <Text style={styles.value}>{formatToEuro(invoice.total)}</Text>
-
-            <Text style={styles.label}>Tax:</Text>
-            <Text style={styles.value}>{formatToEuro(invoice.tax)}</Text>
-          </View>
-
-          <View style={styles.items}>
-            <Text style={styles.sectionTitle}>Invoice Items</Text>
+        <Text style={styles.sectionTitle}>Invoice Items</Text>
+        <View style={styles.items}>
+          <ScrollView contentContainerStyle={styles.itemsScrollViewContainer}>
             {invoice.invoice_lines.map((line) => (
-              <View key={line.id} style={styles.item}>
-                <Text style={styles.itemText}>
-                  {line.quantity}x {line.label}
-                </Text>
-                <Text style={styles.itemText}>{formatToEuro(line.price)}</Text>
+              <View key={line.id} style={styles.itemRow}>
+                <ItemRow label="ID" value={line.id} />
+                <ItemRow label="Product" value={line.label} />
+                <ItemRow label="Quantity" value={line.quantity} />
+                <ItemRow label="Unit Price" value={formatToEuro(line.price)} />
+                <ItemRow
+                  label="Total Price"
+                  value={formatToEuro(parseFloat(line.price) * line.quantity)}
+                />
               </View>
             ))}
-          </View>
-
-          <View style={styles.actions}>
-            {!invoice.finalized && (
-              <TouchableOpacity
-                onPress={handleFinalize}
-                style={styles.finalizeButton}
-              >
-                <Text style={styles.actionText}>Finalize Invoice</Text>
-              </TouchableOpacity>
-            )}
+          </ScrollView>
+        </View>
+        <View style={styles.actions}>
+          {!invoice.finalized && (
             <TouchableOpacity
-              onPress={handleDelete}
-              style={styles.deleteButton}
+              onPress={handleFinalize}
+              style={styles.finalizeButton}
             >
-              <Text style={styles.actionText}>Delete Invoice</Text>
+              <Text style={styles.actionText}>Finalize Invoice</Text>
             </TouchableOpacity>
-          </View>
-        </ScrollView>
+          )}
+          <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
+            <Text style={styles.actionText}>Delete Invoice</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   )
@@ -190,39 +201,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
   },
-  // headerContainer: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   justifyContent: 'space-between',
-  //   marginBottom: 16,
-  //   paddingHorizontal: 16,
-  //   backgroundColor: '#e2e2e2',
-  //   paddingVertical: 10,
-  //   borderRadius: 8,
-  //   shadowColor: '#000',
-  //   shadowOffset: { width: 0, height: 2 },
-  //   shadowOpacity: 0.25,
-  //   shadowRadius: 4,
-  //   elevation: 3,
-  // },
-  // headerTitle: {
-  //   fontSize: 24,
-  //   fontWeight: 'bold',
-  //   color: '#1D3557',
-  // },
-  // addButton: {
-  //   backgroundColor: '#457B9D',
-  //   borderRadius: 50,
-  //   width: 40,
-  //   height: 40,
-  //   alignItems: 'center',
-  //   justifyContent: 'center',
-  // },
-  // addButtonText: {
-  //   color: '#FFF',
-  //   fontSize: 20,
-  //   fontWeight: 'bold',
-  // },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -230,19 +208,27 @@ const styles = StyleSheet.create({
   },
   details: {
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    padding: 16,
+    borderRadius: 8,
   },
-  label: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#457B9D',
-  },
-  value: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#6C757D',
+  itemsScrollViewContainer: {
+    flex: 1,
   },
   items: {
+    flex: 1,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    padding: 16,
+    borderRadius: 8,
+  },
+  itemRow: {
+    marginBottom: 8,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
   sectionTitle: {
     fontSize: 18,
@@ -250,16 +236,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: '#1D3557',
   },
-  item: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  itemText: { fontSize: 16, color: '#6C757D' },
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#457B9D',
   },
   finalizeButton: {
     backgroundColor: '#457B9D',

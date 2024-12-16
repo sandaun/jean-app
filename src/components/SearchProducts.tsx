@@ -124,7 +124,6 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     borderRadius: 8,
     padding: 10,
-    marginBottom: 8,
   },
   listContainer: {
     position: 'absolute',

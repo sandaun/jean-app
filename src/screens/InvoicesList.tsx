@@ -23,6 +23,7 @@ import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../navigation/AppNavigator'
 import Header from '../components/Header'
+import StatusPills from '../components/StatusPills'
 
 type FetchInvoicesResponse = Paths.GetInvoices.Responses.$200
 
@@ -225,25 +226,12 @@ const InvoicesList = () => {
                       </Text>
 
                       {/* Estat de l'Invoice */}
-                      <View style={styles.pillsContainer}>
-                        {item.paid && (
-                          <Text style={[styles.pill, styles.pillPaid]}>
-                            Paid
-                          </Text>
-                        )}
-                        {!item.paid && isOverdue(item.date, item.deadline) && (
-                          <Text style={[styles.pill, styles.pillOverdue]}>
-                            Overdue
-                          </Text>
-                        )}
-                        {item.finalized &&
-                          !isOverdue(item.date, item.deadline) &&
-                          !item.paid && (
-                            <Text style={[styles.pill, styles.pillFinalized]}>
-                              Finalized
-                            </Text>
-                          )}
-                      </View>
+                      <StatusPills
+                        paid={item.paid}
+                        finalized={item.finalized}
+                        date={item.date}
+                        deadline={item.deadline}
+                      />
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -437,7 +425,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#A8DADC',
+    borderTopColor: '#457B9D',
   },
   paginationText: {
     fontSize: 14,
@@ -486,32 +474,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     color: '#6C757D',
-  },
-  pillsContainer: {
-    flexDirection: 'row',
-    marginTop: 4,
-  },
-  pill: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    overflow: 'hidden',
-    fontSize: 12,
-    fontWeight: '600',
-    marginRight: 4,
-    textAlign: 'center',
-  },
-  pillOverdue: {
-    backgroundColor: '#FDEBD0',
-    color: '#E67E22',
-  },
-  pillPaid: {
-    backgroundColor: '#D4EFDF',
-    color: '#28B463',
-  },
-  pillFinalized: {
-    backgroundColor: '#E8F6F3',
-    color: '#1F618D',
   },
   modalContainer: {
     flex: 1,
