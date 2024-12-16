@@ -221,13 +221,6 @@ const InvoicesList = () => {
                         Date: {item.date}
                       </Text>
                     </View>
-
-                    {/* Informació a la dreta */}
-                    {/* <View style={styles.invoiceItemTotalContainer}>
-                      <Text style={styles.invoiceItemTotal}>
-                        {formatToEuro(item.total)}
-                      </Text> */}
-
                     <View style={styles.invoiceItemTotalContainer}>
                       <Text style={styles.invoiceItemTotal}>
                         {calculateAndFormatInvoiceTotal(item.invoice_lines)}
@@ -275,13 +268,15 @@ const InvoicesList = () => {
                 <Text style={styles.modalTitle}>Create Invoice</Text>
 
                 {/* Client i data de venciment */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Customer</Text>
-                  <SearchCustomers
-                    onSelect={(id) =>
-                      setNewInvoice({ ...newInvoice, customer_id: id })
-                    }
-                  />
+                <View style={styles.searchCustomersContainer}>
+                  <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Customer</Text>
+                    <SearchCustomers
+                      onSelect={(id) =>
+                        setNewInvoice({ ...newInvoice, customer_id: id })
+                      }
+                    />
+                  </View>
                 </View>
 
                 <View style={styles.section}>
@@ -372,7 +367,7 @@ const InvoicesList = () => {
                     <View key={index} style={styles.itemRow}>
                       <Text style={styles.itemText}>
                         {item.product_id} - {item.label} (x{item.quantity || 1})
-                        - Total: ${(item.quantity || 1) * (item.price || 0)}
+                        - Total: {(item.quantity || 1) * (item.price || 0)} €
                       </Text>
                       <TouchableOpacity
                         onPress={() => {
@@ -482,6 +477,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     color: '#6C757D',
+  },
+  searchCustomersContainer: {
+    zIndex: 1,
   },
   modalContainer: {
     flex: 1,
