@@ -4,7 +4,6 @@ import {
   Text,
   View,
   StyleSheet,
-  Button,
   Modal,
   TextInput,
   ActivityIndicator,
@@ -18,7 +17,11 @@ import { useApi } from '../api'
 import { Components, Paths } from '../api/generated/client'
 import SearchCustomers from '../components/SearchCustomers'
 import SearchProducts from '../components/SearchProducts'
-import { isOverdue, formatToEuro } from '../utils/utils'
+import {
+  calculateAndFormatInvoiceTotal,
+  calculateInvoiceTotal,
+  formatToEuro,
+} from '../utils/utils'
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../navigation/AppNavigator'
@@ -220,9 +223,14 @@ const InvoicesList = () => {
                     </View>
 
                     {/* Informació a la dreta */}
-                    <View style={styles.invoiceItemTotalContainer}>
+                    {/* <View style={styles.invoiceItemTotalContainer}>
                       <Text style={styles.invoiceItemTotal}>
                         {formatToEuro(item.total)}
+                      </Text> */}
+
+                    <View style={styles.invoiceItemTotalContainer}>
+                      <Text style={styles.invoiceItemTotal}>
+                        {calculateAndFormatInvoiceTotal(item.invoice_lines)}
                       </Text>
 
                       {/* Estat de l'Invoice */}
@@ -522,7 +530,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 16,
     zIndex: 1,
   },
   searchProductsInputContainer: {
@@ -571,8 +579,11 @@ const styles = StyleSheet.create({
   },
   modalActions: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     marginTop: 12,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#457B9D',
   },
   saveButton: {
     backgroundColor: '#457B9D',

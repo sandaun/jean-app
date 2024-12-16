@@ -10,7 +10,11 @@ import {
   SafeAreaView,
 } from 'react-native'
 import { useApi } from '../api'
-import { formatToEuro } from '../utils/utils'
+import {
+  calculateAndFormatInvoiceTaxTotal,
+  calculateAndFormatInvoiceTotal,
+  formatToEuro,
+} from '../utils/utils'
 import { Components } from '../api/generated/client'
 import { RouteProp } from '@react-navigation/native'
 import { RootStackParamList } from '../navigation/AppNavigator'
@@ -112,8 +116,6 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
     return null
   }
 
-  console.log(12, invoice.invoice_lines[0])
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -144,9 +146,9 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
           />
           <DetailRow
             label1="Total"
-            value1={formatToEuro(invoice.total)}
+            value1={calculateAndFormatInvoiceTotal(invoice.invoice_lines)}
             label2="Tax"
-            value2={formatToEuro(invoice.tax)}
+            value2={calculateAndFormatInvoiceTaxTotal(invoice.invoice_lines)}
           />
         </View>
 
