@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
   FlatList,
   Text,
@@ -14,21 +14,16 @@ import {
   SafeAreaView,
 } from 'react-native'
 import { useApi } from '../api'
-import { Components, Paths } from '../api/generated/client'
+import { Components } from '../api/generated/client'
 import SearchCustomers from '../components/SearchCustomers'
 import SearchProducts from '../components/SearchProducts'
-import {
-  calculateAndFormatInvoiceTotal,
-  calculateInvoiceTotal,
-  formatToEuro,
-} from '../utils/utils'
+import { calculateAndFormatInvoiceTotal } from '../utils/utils'
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../navigation/AppNavigator'
 import Header from '../components/Header'
 import StatusPills from '../components/StatusPills'
-
-type FetchInvoicesResponse = Paths.GetInvoices.Responses.$200
+import { useInvoices } from '../context/InvoicesContext'
 
 type InvoicesListNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -36,24 +31,20 @@ type InvoicesListNavigationProp = NativeStackNavigationProp<
 >
 
 const InvoicesList = () => {
-  const [invoices, setInvoices] = useState<FetchInvoicesResponse['invoices']>(
-    [],
-  )
-  const [loading, setLoading] = useState(false)
-  const [pagination, setPagination] = useState<
-    FetchInvoicesResponse['pagination'] | null
-  >(null)
-  const [currentPage, setCurrentPage] = useState(1)
   const [modalVisible, setModalVisible] = useState(false)
   const [allProducts, setAllProducts] = useState<Components.Schemas.Product[]>(
     [],
   )
 
+  const { invoices, loading, fetchInvoices } = useInvoices()
+
   const navigation = useNavigation<InvoicesListNavigationProp>()
 
   const searchProductsRef = useRef<{ clearSelection: () => void }>(null)
 
-  const fetchProducts = async () => {
+  const api = useApi()
+
+  const fetchProducts = useCallback(async () => {
     try {
       const { data } = await api.getSearchProducts({
         query: '',
@@ -63,7 +54,7 @@ const InvoicesList = () => {
     } catch (error) {
       console.error('Error fetching products:', error)
     }
-  }
+  }, [api])
 
   const [newInvoice, setNewInvoice] =
     useState<Components.Schemas.InvoiceCreatePayload>({
@@ -86,31 +77,13 @@ const InvoicesList = () => {
       tax: '',
     })
 
-  const api = useApi()
-
   useEffect(() => {
     fetchInvoices()
-  }, [currentPage])
+  }, [fetchInvoices])
 
   useEffect(() => {
     fetchProducts()
-  }, [])
-
-  const fetchInvoices = async () => {
-    setLoading(true)
-    try {
-      const { data } = await api.getInvoices({
-        page: currentPage,
-        per_page: 10,
-      })
-      setInvoices(data.invoices)
-      setPagination(data.pagination)
-    } catch (error) {
-      console.error('Error fetching invoices:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [fetchProducts])
 
   const handleOpenModal = () => {
     setNewInvoice({
@@ -238,25 +211,6 @@ const InvoicesList = () => {
                 </TouchableOpacity>
               )}
             />
-            <View style={styles.pagination}>
-              <TouchableOpacity
-                style={styles.paginationButton}
-                onPress={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={pagination?.page === 1}
-              >
-                <Text style={styles.paginationButtonText}>Previous</Text>
-              </TouchableOpacity>
-              <Text style={styles.paginationText}>
-                Page {pagination?.page} of {pagination?.total_pages}
-              </Text>
-              <TouchableOpacity
-                style={styles.paginationButton}
-                onPress={() => setCurrentPage((prev) => prev + 1)}
-                disabled={pagination?.page === pagination?.total_pages}
-              >
-                <Text style={styles.paginationButtonText}>Next</Text>
-              </TouchableOpacity>
-            </View>
           </>
         )}
 
@@ -363,28 +317,30 @@ const InvoicesList = () => {
 
                 {/* Llista d'items */}
                 <ScrollView style={styles.itemsList}>
-                  {newInvoice.invoice_lines_attributes.map((item, index) => (
-                    <View key={index} style={styles.itemRow}>
-                      <Text style={styles.itemText}>
-                        {item.product_id} - {item.label} (x{item.quantity || 1})
-                        - Total: {(item.quantity || 1) * (item.price || 0)} €
-                      </Text>
-                      <TouchableOpacity
-                        onPress={() => {
-                          const updatedItems =
-                            newInvoice.invoice_lines_attributes.filter(
-                              (_, i) => i !== index,
-                            )
-                          setNewInvoice((prev) => ({
-                            ...prev,
-                            invoice_lines_attributes: updatedItems,
-                          }))
-                        }}
-                      >
-                        <Text style={styles.deleteText}>Delete</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ))}
+                  {(newInvoice.invoice_lines_attributes ?? []).map(
+                    (item, index) => (
+                      <View key={index} style={styles.itemRow}>
+                        <Text style={styles.itemText}>
+                          {item.product_id} - {item.label} (x
+                          {item.quantity || 1}) - Total:{' '}
+                          {(item.quantity || 1) * Number(item.price || 0)} €
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => {
+                            const updatedItems = (
+                              newInvoice.invoice_lines_attributes ?? []
+                            ).filter((_, i) => i !== index)
+                            setNewInvoice((prev) => ({
+                              ...prev,
+                              invoice_lines_attributes: updatedItems,
+                            }))
+                          }}
+                        >
+                          <Text style={styles.deleteText}>Delete</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ),
+                  )}
                 </ScrollView>
 
                 {/* Botons d'acció */}
@@ -479,7 +435,7 @@ const styles = StyleSheet.create({
     color: '#6C757D',
   },
   searchCustomersContainer: {
-    zIndex: 1,
+    zIndex: 2,
   },
   modalContainer: {
     flex: 1,
@@ -505,6 +461,7 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 16,
+    zIndex: 1,
   },
   sectionTitle: {
     fontSize: 16,

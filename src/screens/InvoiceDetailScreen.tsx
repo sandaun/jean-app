@@ -1,21 +1,18 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import {
   View,
   Text,
   StyleSheet,
-  ActivityIndicator,
   Alert,
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
 } from 'react-native'
-import { useApi } from '../api'
 import {
   calculateAndFormatInvoiceTaxTotal,
   calculateAndFormatInvoiceTotal,
   formatToEuro,
 } from '../utils/utils'
-import { Components } from '../api/generated/client'
 import { RouteProp } from '@react-navigation/native'
 import { RootStackParamList } from '../navigation/AppNavigator'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -23,6 +20,7 @@ import Header from '../components/Header'
 import DetailRow from '../components/DetailRow'
 import StatusPills from '../components/StatusPills'
 import ItemRow from '../components/ItemRow'
+import { useInvoices } from '../context/InvoicesContext'
 
 type InvoiceDetailScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -43,28 +41,9 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
   navigation,
 }) => {
   const { invoiceId } = route.params
-  const [invoice, setInvoice] = useState<Components.Schemas.Invoice | null>(
-    null,
-  )
-  const [loading, setLoading] = useState(true)
-  const api = useApi()
+  const { invoices, deleteInvoice, finalizeInvoice } = useInvoices()
 
-  useEffect(() => {
-    const fetchInvoice = async () => {
-      try {
-        const { data } = await api.getInvoice({ id: invoiceId })
-        setInvoice(data)
-      } catch (error) {
-        console.error('Error fetching invoice:', error)
-        Alert.alert('Error', 'Failed to fetch invoice details.')
-        navigation.goBack()
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchInvoice()
-  }, [invoiceId])
+  const invoice = invoices.find((inv) => inv.id === invoiceId)
 
   const handleDelete = async () => {
     Alert.alert(
@@ -77,9 +56,11 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
           style: 'destructive',
           onPress: async () => {
             try {
-              await api.deleteInvoice({ id: invoiceId })
+              await deleteInvoice(invoiceId)
               Alert.alert('Success', 'Invoice deleted successfully.')
-              navigation.goBack()
+              navigation.canGoBack()
+                ? navigation.goBack()
+                : navigation.navigate('InvoicesList')
             } catch (error) {
               console.error('Error deleting invoice:', error)
               Alert.alert('Error', 'Failed to delete the invoice.')
@@ -93,12 +74,11 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
   const handleFinalize = async () => {
     if (!invoice?.finalized) {
       try {
-        await api.putInvoice(
-          { id: invoiceId },
-          { invoice: { finalized: true } },
-        )
+        await finalizeInvoice(invoiceId)
         Alert.alert('Success', 'Invoice finalized successfully.')
-        setInvoice({ ...invoice, finalized: true })
+        navigation.canGoBack()
+          ? navigation.goBack()
+          : navigation.navigate('InvoicesList')
       } catch (error) {
         console.error('Error finalizing invoice:', error)
         Alert.alert('Error', 'Failed to finalize the invoice.')
@@ -106,14 +86,14 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
     }
   }
 
-  if (loading) {
-    return (
-      <ActivityIndicator style={styles.loader} size="large" color="#007bff" />
-    )
-  }
-
   if (!invoice) {
-    return null
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loader}>
+          <Text>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    )
   }
 
   return (
