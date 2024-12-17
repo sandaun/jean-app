@@ -24,6 +24,7 @@ import { RootStackParamList } from '../navigation/AppNavigator'
 import Header from '../components/Header'
 import StatusPills from '../components/StatusPills'
 import { useInvoices } from '../context/InvoicesContext'
+import InvoiceModal from '../components/InvoiceModal'
 
 type InvoicesListNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -40,7 +41,7 @@ const InvoicesList = () => {
 
   const navigation = useNavigation<InvoicesListNavigationProp>()
 
-  const searchProductsRef = useRef<{ clearSelection: () => void }>(null)
+  // const searchProductsRef = useRef<{ clearSelection: () => void }>(null)
 
   const api = useApi()
 
@@ -106,40 +107,6 @@ const InvoicesList = () => {
     setModalVisible(true)
   }
 
-  const handleAddItem = () => {
-    if (!newItem.label) {
-      Alert.alert('Error', 'Please select a product before adding.')
-      return
-    }
-
-    if (!newItem.quantity || newItem.quantity <= 0) {
-      Alert.alert('Error', 'Please enter a valid quantity.')
-      return
-    }
-
-    // Si tot és correcte, afegim l'article
-    setNewInvoice((prevInvoice) => ({
-      ...prevInvoice,
-      invoice_lines_attributes: [
-        ...(prevInvoice.invoice_lines_attributes || []),
-        newItem,
-      ],
-    }))
-
-    // Aquí esborrem la selecció i el `newItem` només després d'afegir correctament
-    setNewItem({
-      product_id: 0,
-      label: '',
-      quantity: 1,
-      unit: undefined,
-      vat_rate: undefined,
-      price: '',
-      tax: '',
-    })
-
-    searchProductsRef.current?.clearSelection()
-  }
-
   const handleCreateInvoice = async () => {
     if (!newInvoice.customer_id || !newInvoice.deadline) {
       Alert.alert(
@@ -164,10 +131,9 @@ const InvoicesList = () => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <Header
-          title="Invoice List"
-          buttonPosition="right"
-          buttonSymbol="+"
-          onButtonPress={handleOpenModal}
+          title={'Invoice List'}
+          rightButtonSymbol="+"
+          onRightButtonPress={handleOpenModal}
         />
         {loading ? (
           <ActivityIndicator size="large" color="#007bff" />
@@ -213,155 +179,14 @@ const InvoicesList = () => {
             />
           </>
         )}
-
-        <Modal visible={modalVisible} animationType="slide" transparent={true}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContentWrapper}>
-              <View style={styles.modalContent}>
-                {/* Títol del modal */}
-                <Text style={styles.modalTitle}>Create Invoice</Text>
-
-                {/* Client i data de venciment */}
-                <View style={styles.searchCustomersContainer}>
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Customer</Text>
-                    <SearchCustomers
-                      onSelect={(id) =>
-                        setNewInvoice({ ...newInvoice, customer_id: id })
-                      }
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Deadline</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Deadline (YYYY-MM-DD)"
-                    value={newInvoice.deadline || ''}
-                    onChangeText={(text) =>
-                      setNewInvoice({ ...newInvoice, deadline: text })
-                    }
-                  />
-                </View>
-
-                {/* Switches Paid i Finalized */}
-                <View style={styles.switchContainer}>
-                  <View style={styles.switchRow}>
-                    <Text style={styles.switchLabel}>Paid</Text>
-                    <Switch
-                      value={newInvoice.paid}
-                      onValueChange={(value) =>
-                        setNewInvoice({ ...newInvoice, paid: value })
-                      }
-                    />
-                  </View>
-                  <View style={styles.switchRow}>
-                    <Text style={styles.switchLabel}>Finalized</Text>
-                    <Switch
-                      value={newInvoice.finalized}
-                      onValueChange={(value) =>
-                        setNewInvoice({ ...newInvoice, finalized: value })
-                      }
-                    />
-                  </View>
-                </View>
-
-                {/* Afegir producte i quantitat */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Add Items</Text>
-                  <View style={styles.row}>
-                    <View style={styles.searchProductsInputContainer}>
-                      <SearchProducts
-                        ref={searchProductsRef}
-                        onSelect={(productId) => {
-                          const selectedProduct = allProducts.find(
-                            (p) => p.id === productId,
-                          )
-                          if (selectedProduct) {
-                            setNewItem({
-                              product_id: selectedProduct.id,
-                              label: selectedProduct.label,
-                              quantity: 1,
-                              unit: selectedProduct.unit,
-                              vat_rate: selectedProduct.vat_rate,
-                              price: parseFloat(selectedProduct.unit_price),
-                              tax: parseFloat(selectedProduct.unit_tax),
-                            })
-                          }
-                        }}
-                      />
-                    </View>
-                    <View style={styles.quantityInputContainer}>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Qty"
-                        keyboardType="numeric"
-                        value={newItem.quantity?.toString() || ''}
-                        onChangeText={(text) =>
-                          setNewItem({
-                            ...newItem,
-                            quantity: text === '' ? undefined : Number(text),
-                          })
-                        }
-                      />
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    onPress={handleAddItem}
-                    style={styles.addItemButton}
-                  >
-                    <Text style={styles.addItemButtonText}>Add Item</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Llista d'items */}
-                <ScrollView style={styles.itemsList}>
-                  {(newInvoice.invoice_lines_attributes ?? []).map(
-                    (item, index) => (
-                      <View key={index} style={styles.itemRow}>
-                        <Text style={styles.itemText}>
-                          {item.product_id} - {item.label} (x
-                          {item.quantity || 1}) - Total:{' '}
-                          {(item.quantity || 1) * Number(item.price || 0)} €
-                        </Text>
-                        <TouchableOpacity
-                          onPress={() => {
-                            const updatedItems = (
-                              newInvoice.invoice_lines_attributes ?? []
-                            ).filter((_, i) => i !== index)
-                            setNewInvoice((prev) => ({
-                              ...prev,
-                              invoice_lines_attributes: updatedItems,
-                            }))
-                          }}
-                        >
-                          <Text style={styles.deleteText}>Delete</Text>
-                        </TouchableOpacity>
-                      </View>
-                    ),
-                  )}
-                </ScrollView>
-
-                {/* Botons d'acció */}
-                <View style={styles.modalActions}>
-                  <TouchableOpacity
-                    onPress={handleCreateInvoice}
-                    style={styles.saveButton}
-                  >
-                    <Text style={styles.buttonText}>Save</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => setModalVisible(false)}
-                    style={styles.cancelButton}
-                  >
-                    <Text style={styles.buttonText}>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </View>
-        </Modal>
+        <InvoiceModal
+          setInvoice={setNewInvoice}
+          visible={modalVisible}
+          invoice={newInvoice}
+          allProducts={allProducts}
+          onClose={() => setModalVisible(false)}
+          onSave={handleCreateInvoice}
+        />
       </View>
     </SafeAreaView>
   )

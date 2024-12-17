@@ -15,12 +15,25 @@ type FetchCustomersResponse =
 
 const DEBOUNCE_DELAY = 300
 
-const SearchCustomers = ({ onSelect }: { onSelect: (id: number) => void }) => {
-  const [query, setQuery] = useState('')
+const SearchCustomers = ({
+  onSelect,
+  selectedCustomerName,
+}: {
+  onSelect: (id: number) => void
+  selectedCustomerName?: string
+}) => {
+  const [query, setQuery] = useState(selectedCustomerName || '')
   const [allCustomers, setAllCustomers] = useState<FetchCustomersResponse>([])
   const [filteredCustomers, setFilteredCustomers] =
     useState<FetchCustomersResponse>([])
   const api = useApi()
+
+  // Sincronitza el nom del client seleccionat quan canviï
+  useEffect(() => {
+    if (selectedCustomerName) {
+      setQuery(selectedCustomerName)
+    }
+  }, [selectedCustomerName])
 
   useEffect(() => {
     const fetchAllCustomers = async () => {

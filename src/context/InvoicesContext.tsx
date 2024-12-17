@@ -6,15 +6,15 @@ import React, {
   useEffect,
   useCallback,
 } from 'react'
-import { Components, Paths } from '../api/generated/client'
+import { Components } from '../api/generated/client'
 import { useApi } from '../api'
 
 type InvoiceContextType = {
-  invoices: Paths.GetInvoices.Responses.$200['invoices'] // Ajustat
+  invoices: Components.Schemas.Invoice[]
   loading: boolean
   fetchInvoices: () => Promise<void>
   updateInvoice: (
-    updatedInvoice: Paths.GetInvoices.Responses.$200['invoices'][0],
+    updatedInvoice: Components.Schemas.InvoiceUpdatePayload,
   ) => Promise<void>
   deleteInvoice: (invoiceId: number) => Promise<void>
   finalizeInvoice: (invoiceId: number) => Promise<void>
@@ -29,7 +29,6 @@ export const InvoicesProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true)
   const api = useApi()
 
-  // Funció per fer fetch de les factures
   const fetchInvoices = useCallback(async () => {
     setLoading(true)
     try {
@@ -42,16 +41,20 @@ export const InvoicesProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [api])
 
-  // Actualitzar una factura
-  const updateInvoice = async (updatedInvoice: Components.Schemas.Invoice) => {
+  const updateInvoice = async (
+    updatedInvoice: Components.Schemas.InvoiceUpdatePayload,
+  ) => {
     try {
       await api.putInvoice(
         { id: updatedInvoice.id },
         { invoice: updatedInvoice },
       )
+
+      const { data } = await api.getInvoice({ id: updatedInvoice.id })
+
       setInvoicesState((prevInvoices) =>
         prevInvoices.map((invoice) =>
-          invoice.id === updatedInvoice.id ? updatedInvoice : invoice,
+          invoice.id === data.id ? data : invoice,
         ),
       )
     } catch (error) {
@@ -59,7 +62,6 @@ export const InvoicesProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  // Eliminar una factura
   const deleteInvoice = async (invoiceId: number) => {
     try {
       await api.deleteInvoice({ id: invoiceId })
@@ -71,15 +73,20 @@ export const InvoicesProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  // Finalitzar una factura
   const finalizeInvoice = async (invoiceId: number) => {
     try {
       const invoice = invoices.find((inv) => inv.id === invoiceId)
       if (!invoice) return
-      await api.putInvoice(
-        { id: invoiceId },
-        { invoice: { ...invoice, finalized: true } },
-      )
+
+      const { customer_id, ...rest } = invoice
+      const invoiceToUpdate = {
+        ...rest,
+        customer_id: customer_id ?? undefined,
+        finalized: true,
+      }
+
+      await api.putInvoice({ id: invoice.id }, { invoice: invoiceToUpdate })
+
       setInvoicesState((prevInvoices) =>
         prevInvoices.map((inv) =>
           inv.id === invoiceId ? { ...inv, finalized: true } : inv,
@@ -90,10 +97,9 @@ export const InvoicesProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  // Fetch inicial
   useEffect(() => {
     fetchInvoices()
-  }, [])
+  }, [fetchInvoices])
 
   return (
     <InvoiceContext.Provider

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   View,
   Text,
@@ -21,6 +21,9 @@ import DetailRow from '../components/DetailRow'
 import StatusPills from '../components/StatusPills'
 import ItemRow from '../components/ItemRow'
 import { useInvoices } from '../context/InvoicesContext'
+import { Components } from '../api/generated/client'
+import InvoiceModal from '../components/InvoiceModal'
+import { useApi } from '../api'
 
 type InvoiceDetailScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -40,8 +43,44 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
   route,
   navigation,
 }) => {
+  const emptyInvoice: Components.Schemas.InvoiceCreatePayload = {
+    customer_id: 0,
+    date: new Date().toISOString().split('T')[0],
+    deadline: '',
+    paid: false,
+    finalized: false,
+    invoice_lines_attributes: [],
+  }
+
   const { invoiceId } = route.params
-  const { invoices, deleteInvoice, finalizeInvoice } = useInvoices()
+
+  const [modalVisible, setModalVisible] = useState(false)
+  const [editableInvoice, setEditableInvoice] =
+    useState<Components.Schemas.InvoiceCreatePayload>(emptyInvoice)
+  const [allProducts, setAllProducts] = useState<Components.Schemas.Product[]>(
+    [],
+  )
+
+  const api = useApi()
+
+  const { invoices, deleteInvoice, finalizeInvoice, updateInvoice } =
+    useInvoices()
+
+  const fetchProducts = useCallback(async () => {
+    try {
+      const { data } = await api.getSearchProducts({
+        query: '',
+        per_page: 1000,
+      })
+      setAllProducts(data.products)
+    } catch (error) {
+      console.error('Error fetching products:', error)
+    }
+  }, [api])
+
+  useEffect(() => {
+    fetchProducts()
+  }, [fetchProducts])
 
   const invoice = invoices.find((inv) => inv.id === invoiceId)
 
@@ -100,10 +139,33 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <Header
-          title={`Invoice #${invoice.id}`}
-          buttonPosition="left"
-          buttonSymbol="←"
-          onButtonPress={() => navigation.goBack()}
+          title={`Invoice #${invoice?.id}`}
+          backButton={true}
+          onBackPress={() => navigation.goBack()}
+          rightButtonSymbol="..."
+          onRightButtonPress={() => {
+            // Obrir modal per editar només si no està finalized o paid
+            if (!invoice.finalized && !invoice.paid) {
+              setEditableInvoice({
+                customer_id: invoice.customer?.id ?? 0,
+                date: invoice.date,
+                deadline: invoice.deadline,
+                paid: invoice.paid,
+                finalized: invoice.finalized,
+                invoice_lines_attributes: invoice.invoice_lines.map((line) => ({
+                  product_id: line.product_id,
+                  label: line.label,
+                  quantity: line.quantity,
+                  unit: line.unit,
+                  vat_rate: line.vat_rate,
+                  price: line.price.toString(),
+                  tax: line.tax.toString(),
+                })),
+              })
+              setModalVisible(true)
+            }
+          }}
+          rightButtonDisabled={invoice.finalized || invoice.paid}
         />
         <Text style={styles.sectionTitle}>Invoice Details</Text>
         <View style={styles.details}>
@@ -162,6 +224,78 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
             <Text style={styles.actionText}>Delete Invoice</Text>
           </TouchableOpacity>
         </View>
+        {editableInvoice && (
+          <InvoiceModal
+            visible={modalVisible}
+            invoice={editableInvoice}
+            setInvoice={setEditableInvoice}
+            allProducts={allProducts}
+            onClose={() => setModalVisible(false)}
+            onSave={async (updatedInvoice) => {
+              console.log('Updated invoice:', updatedInvoice)
+
+              try {
+                const existingLines = invoice.invoice_lines
+                const updatedLines =
+                  updatedInvoice.invoice_lines_attributes || []
+
+                const mergedInvoiceLines: Components.Schemas.InvoiceLineUpdatePayload[] =
+                  []
+
+                const processedIds = new Set<number>()
+
+                updatedLines.forEach((line) => {
+                  const matchingLine = existingLines.find(
+                    (existing) => existing.product_id === line.product_id,
+                  )
+
+                  if (matchingLine) {
+                    mergedInvoiceLines.push({
+                      id: matchingLine.id,
+                      quantity: line.quantity || matchingLine.quantity,
+                      label: line.label || matchingLine.label,
+                      unit: line.unit || matchingLine.unit,
+                      vat_rate: line.vat_rate || matchingLine.vat_rate,
+                      price: line.price || matchingLine.price,
+                      tax: line.tax || matchingLine.tax,
+                    })
+
+                    processedIds.add(matchingLine.id)
+                  } else {
+                    mergedInvoiceLines.push({ ...line })
+                  }
+                })
+
+                existingLines.forEach((existingLine) => {
+                  if (!processedIds.has(existingLine.id)) {
+                    mergedInvoiceLines.push({
+                      id: existingLine.id,
+                      _destroy: true,
+                    })
+                  }
+                })
+
+                const invoiceToUpdate = {
+                  id: invoiceId,
+                  customer_id: updatedInvoice.customer_id,
+                  finalized: updatedInvoice.finalized || false,
+                  paid: updatedInvoice.paid || false,
+                  date: updatedInvoice.date || null,
+                  deadline: updatedInvoice.deadline || null,
+                  total: '0',
+                  tax: '0',
+                  invoice_lines_attributes: mergedInvoiceLines,
+                }
+
+                console.log('Invoice to update (final):', invoiceToUpdate)
+                await updateInvoice(invoiceToUpdate)
+                setModalVisible(false)
+              } catch (error) {
+                console.error('Error updating invoice:', error)
+              }
+            }}
+          />
+        )}
       </View>
     </SafeAreaView>
   )
