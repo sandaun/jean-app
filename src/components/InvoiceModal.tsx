@@ -13,6 +13,7 @@ import SearchCustomers from './SearchCustomers'
 import SearchProducts from './SearchProducts'
 import { Components } from '../api/generated/client'
 import { useApi } from '../api'
+import { INITIAL_INVOICE_LINE } from '../constants/constants'
 
 interface InvoiceModalProps {
   visible: boolean
@@ -23,6 +24,7 @@ interface InvoiceModalProps {
   setInvoice: React.Dispatch<
     React.SetStateAction<Components.Schemas.InvoiceCreatePayload>
   >
+  title: string
 }
 
 const InvoiceModal: React.FC<InvoiceModalProps> = ({
@@ -32,10 +34,15 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
   onClose,
   onSave,
   setInvoice,
+  title,
 }) => {
   const [allCustomers, setAllCustomers] = useState<
     Components.Schemas.Customer[]
   >([])
+  const [newItem, setNewItem] =
+    useState<Components.Schemas.InvoiceLineCreatePayload>(INITIAL_INVOICE_LINE)
+
+  const searchProductsRef = useRef<{ clearSelection: () => void }>(null)
 
   const api = useApi()
 
@@ -55,19 +62,6 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
   const selectedCustomerName = allCustomers.find(
     (customer) => customer.id === invoice.customer_id,
   )
-
-  const [newItem, setNewItem] =
-    useState<Components.Schemas.InvoiceLineCreatePayload>({
-      product_id: 0,
-      label: '',
-      quantity: 1,
-      unit: undefined,
-      vat_rate: undefined,
-      price: '',
-      tax: '',
-    })
-
-  const searchProductsRef = useRef<{ clearSelection: () => void }>(null)
 
   const handleAddItem = () => {
     if (!newItem.label) return
@@ -98,15 +92,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
       }
     })
 
-    setNewItem({
-      product_id: 0,
-      label: '',
-      quantity: 1,
-      unit: undefined,
-      vat_rate: undefined,
-      price: '',
-      tax: '',
-    })
+    setNewItem(INITIAL_INVOICE_LINE)
 
     searchProductsRef.current?.clearSelection()
   }
@@ -116,7 +102,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
       <View style={styles.modalContainer}>
         <View style={styles.modalContentWrapper}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Create Invoice</Text>
+            <Text style={styles.modalTitle}>{title}</Text>
 
             <View style={styles.searchCustomersContainer}>
               <View style={styles.section}>

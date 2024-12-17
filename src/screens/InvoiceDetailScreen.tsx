@@ -271,6 +271,7 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
         </View>
         {editableInvoice && (
           <InvoiceModal
+            title="Edit Invoice"
             visible={modalVisible}
             invoice={editableInvoice}
             setInvoice={setEditableInvoice}

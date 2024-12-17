@@ -142,6 +142,7 @@ const InvoicesList = () => {
           </>
         )}
         <InvoiceModal
+          title="Create Invoice"
           setInvoice={setNewInvoice}
           visible={modalVisible}
           invoice={newInvoice}

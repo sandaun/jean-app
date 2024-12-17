@@ -9,3 +9,14 @@ export const getInitialInvoice =
     finalized: false,
     invoice_lines_attributes: [],
   })
+
+export const INITIAL_INVOICE_LINE: Components.Schemas.InvoiceLineCreatePayload =
+  {
+    product_id: 0,
+    label: '',
+    quantity: 1,
+    unit: undefined,
+    vat_rate: undefined,
+    price: '',
+    tax: '',
+  }
