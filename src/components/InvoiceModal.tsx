@@ -129,14 +129,6 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Deadline</Text>
-              {/* <TextInput
-                style={styles.input}
-                placeholder="Deadline (YYYY-MM-DD)"
-                value={invoice.deadline || ''}
-                onChangeText={(text) =>
-                  setInvoice({ ...invoice, deadline: text })
-                }
-                /> */}
               <DatePicker
                 deadline={
                   invoice.deadline ? new Date(invoice.deadline) : new Date()
@@ -330,8 +322,10 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   itemsList: {
-    maxHeight: 150,
-    marginBottom: 16,
+    padding: 8,
+    borderWidth: 1,
+    borderRadius: 8,
+    borderColor: '#E0E0E0',
   },
   itemText: {
     color: '#333',
@@ -348,31 +342,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 10,
     alignItems: 'center',
+    marginBottom: 4,
   },
   addItemButtonText: {
     color: '#FFF',
     fontWeight: '600',
     fontSize: 16,
-  },
-  dateInputContainer: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    padding: 10,
-    backgroundColor: '#F9F9F9',
-    alignItems: 'center',
-  },
-  datePickerButton: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    padding: 10,
-    backgroundColor: '#F0F0F0',
-    alignItems: 'center',
-  },
-  datePickerText: {
-    fontSize: 16,
-    color: '#457B9D',
   },
   modalActions: {
     flexDirection: 'row',

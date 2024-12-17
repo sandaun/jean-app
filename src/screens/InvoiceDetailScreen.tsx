@@ -257,15 +257,24 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
           </ScrollView>
         </View>
         <View style={styles.actions}>
-          {!invoice.finalized && (
-            <TouchableOpacity
-              onPress={handleFinalize}
-              style={styles.finalizeButton}
-            >
-              <Text style={styles.actionText}>Finalize Invoice</Text>
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
+          <TouchableOpacity
+            onPress={handleFinalize}
+            style={[
+              styles.finalizeButton,
+              invoice.finalized && styles.buttonDisabled,
+            ]}
+            disabled={invoice.finalized}
+          >
+            <Text style={styles.actionText}>Finalize Invoice</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleDelete}
+            style={[
+              styles.deleteButton,
+              invoice.finalized && styles.buttonDisabled,
+            ]}
+            disabled={invoice.finalized}
+          >
             <Text style={styles.actionText}>Delete Invoice</Text>
           </TouchableOpacity>
         </View>
@@ -355,6 +364,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
+  },
+  buttonDisabled: {
+    backgroundColor: '#A8A8A8',
   },
   actionText: {
     color: '#FFF',

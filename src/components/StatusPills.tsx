@@ -23,7 +23,7 @@ const StatusPills: React.FC<StatusPillsProps> = ({
         <Text style={[styles.pill, styles.pillOverdue]}>Overdue</Text>
       )}
 
-      {finalized && !isOverdue(date, deadline) && !paid && (
+      {finalized && !paid && (
         <Text style={[styles.pill, styles.pillFinalized]}>Finalized</Text>
       )}
     </View>
