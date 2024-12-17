@@ -25,6 +25,7 @@ import { useInvoices } from '../context/InvoicesContext'
 import { Components } from '../api/generated/client'
 import InvoiceModal from '../components/InvoiceModal'
 import { useApi } from '../api'
+import { getInitialInvoice } from '../constants/constants'
 
 type InvoiceDetailScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -44,14 +45,8 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
   route,
   navigation,
 }) => {
-  const emptyInvoice: Components.Schemas.InvoiceCreatePayload = {
-    customer_id: 0,
-    date: new Date().toISOString().split('T')[0],
-    deadline: '',
-    paid: false,
-    finalized: false,
-    invoice_lines_attributes: [],
-  }
+  const emptyInvoice: Components.Schemas.InvoiceCreatePayload =
+    getInitialInvoice()
 
   const { invoiceId } = route.params
 

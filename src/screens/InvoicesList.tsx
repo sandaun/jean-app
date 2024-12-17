@@ -19,6 +19,7 @@ import Header from '../components/Header'
 import StatusPills from '../components/StatusPills'
 import { useInvoices } from '../context/InvoicesContext'
 import InvoiceModal from '../components/InvoiceModal'
+import { getInitialInvoice } from '../constants/constants'
 
 type InvoicesListNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -34,6 +35,8 @@ const InvoicesList = () => {
   const [allProducts, setAllProducts] = useState<Components.Schemas.Product[]>(
     [],
   )
+  const [newInvoice, setNewInvoice] =
+    useState<Components.Schemas.InvoiceCreatePayload>(getInitialInvoice())
 
   const { invoices, loading, fetchInvoices } = useInvoices()
 
@@ -53,16 +56,6 @@ const InvoicesList = () => {
     }
   }, [api])
 
-  const [newInvoice, setNewInvoice] =
-    useState<Components.Schemas.InvoiceCreatePayload>({
-      customer_id: 0,
-      date: new Date().toISOString().split('T')[0],
-      deadline: '',
-      paid: false,
-      finalized: false,
-      invoice_lines_attributes: [],
-    })
-
   useEffect(() => {
     fetchInvoices()
   }, [fetchInvoices])
@@ -72,14 +65,7 @@ const InvoicesList = () => {
   }, [fetchProducts])
 
   const handleOpenModal = () => {
-    setNewInvoice({
-      customer_id: 0,
-      date: new Date().toISOString().split('T')[0],
-      deadline: '',
-      paid: false,
-      finalized: false,
-      invoice_lines_attributes: [],
-    })
+    setNewInvoice(getInitialInvoice())
     setModalVisible(true)
   }
 
