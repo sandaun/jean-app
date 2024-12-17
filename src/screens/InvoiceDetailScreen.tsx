@@ -299,6 +299,7 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: 'white',
   },
   loader: {
     flex: 1,
