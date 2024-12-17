@@ -25,6 +25,10 @@ type InvoicesListNavigationProp = NativeStackNavigationProp<
   'InvoicesList'
 >
 
+type InvoiceWithCustomer = Components.Schemas.Invoice & {
+  customer?: Components.Schemas.Customer
+}
+
 const InvoicesList = () => {
   const [modalVisible, setModalVisible] = useState(false)
   const [allProducts, setAllProducts] = useState<Components.Schemas.Product[]>(
@@ -99,6 +103,38 @@ const InvoicesList = () => {
     }
   }
 
+  const renderItem = ({ item }: { item: InvoiceWithCustomer }) => {
+    return (
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate('InvoiceDetail', { invoiceId: item.id })
+        }
+      >
+        <View style={styles.invoiceItem}>
+          <View style={styles.invoiceItemNameContainer}>
+            <Text style={styles.invoiceItemName}>
+              {item.customer?.first_name} {item.customer?.last_name}
+            </Text>
+            <Text style={styles.invoiceItemDate}>Invoice #{item.id}</Text>
+            <Text style={styles.invoiceItemDate}>Date: {item.date}</Text>
+          </View>
+          <View style={styles.invoiceItemTotalContainer}>
+            <Text style={styles.invoiceItemTotal}>
+              {calculateAndFormatInvoiceTotal(item.invoice_lines)}
+            </Text>
+
+            <StatusPills
+              paid={item.paid}
+              finalized={item.finalized}
+              date={item.date}
+              deadline={item.deadline}
+            />
+          </View>
+        </View>
+      </TouchableOpacity>
+    )
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -112,41 +148,10 @@ const InvoicesList = () => {
         ) : (
           <>
             <FlatList
+              showsVerticalScrollIndicator={false}
               data={invoices}
               keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() =>
-                    navigation.navigate('InvoiceDetail', { invoiceId: item.id })
-                  }
-                >
-                  <View style={styles.invoiceItem}>
-                    <View style={styles.invoiceItemNameContainer}>
-                      <Text style={styles.invoiceItemName}>
-                        {item.customer?.first_name} {item.customer?.last_name}
-                      </Text>
-                      <Text style={styles.invoiceItemDate}>
-                        Invoice #{item.id}
-                      </Text>
-                      <Text style={styles.invoiceItemDate}>
-                        Date: {item.date}
-                      </Text>
-                    </View>
-                    <View style={styles.invoiceItemTotalContainer}>
-                      <Text style={styles.invoiceItemTotal}>
-                        {calculateAndFormatInvoiceTotal(item.invoice_lines)}
-                      </Text>
-
-                      <StatusPills
-                        paid={item.paid}
-                        finalized={item.finalized}
-                        date={item.date}
-                        deadline={item.deadline}
-                      />
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              )}
+              renderItem={renderItem}
             />
           </>
         )}
