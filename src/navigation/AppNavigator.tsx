@@ -23,7 +23,6 @@ const AppNavigator = () => {
         <Stack.Screen
           name="InvoiceDetail"
           component={InvoiceDetailScreen}
-          // options={{ title: 'Invoice Details' }}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

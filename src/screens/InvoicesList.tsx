@@ -1,22 +1,16 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   FlatList,
   Text,
   View,
   StyleSheet,
-  Modal,
-  TextInput,
   ActivityIndicator,
   Alert,
-  Switch,
-  ScrollView,
   TouchableOpacity,
   SafeAreaView,
 } from 'react-native'
 import { useApi } from '../api'
 import { Components } from '../api/generated/client'
-import SearchCustomers from '../components/SearchCustomers'
-import SearchProducts from '../components/SearchProducts'
 import { calculateAndFormatInvoiceTotal } from '../utils/utils'
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -40,8 +34,6 @@ const InvoicesList = () => {
   const { invoices, loading, fetchInvoices } = useInvoices()
 
   const navigation = useNavigation<InvoicesListNavigationProp>()
-
-  // const searchProductsRef = useRef<{ clearSelection: () => void }>(null)
 
   const api = useApi()
 
@@ -67,17 +59,6 @@ const InvoicesList = () => {
       invoice_lines_attributes: [],
     })
 
-  const [newItem, setNewItem] =
-    useState<Components.Schemas.InvoiceLineCreatePayload>({
-      product_id: 0,
-      label: '',
-      quantity: 1,
-      unit: undefined,
-      vat_rate: undefined,
-      price: '',
-      tax: '',
-    })
-
   useEffect(() => {
     fetchInvoices()
   }, [fetchInvoices])
@@ -94,15 +75,6 @@ const InvoicesList = () => {
       paid: false,
       finalized: false,
       invoice_lines_attributes: [],
-    })
-    setNewItem({
-      product_id: 0,
-      label: '',
-      quantity: 1,
-      unit: undefined,
-      vat_rate: undefined,
-      price: '',
-      tax: '',
     })
     setModalVisible(true)
   }
@@ -165,7 +137,6 @@ const InvoicesList = () => {
                         {calculateAndFormatInvoiceTotal(item.invoice_lines)}
                       </Text>
 
-                      {/* Estat de l'Invoice */}
                       <StatusPills
                         paid={item.paid}
                         finalized={item.finalized}
@@ -202,29 +173,6 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: 'white',
   },
-  pagination: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 16,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#457B9D',
-  },
-  paginationText: {
-    fontSize: 14,
-    color: '#457B9D',
-  },
-  paginationButton: {
-    backgroundColor: '#457B9D',
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  paginationButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
   invoiceItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -258,131 +206,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     color: '#6C757D',
-  },
-  searchCustomersContainer: {
-    zIndex: 2,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-  },
-  modalContentWrapper: {
-    backgroundColor: 'white',
-    marginHorizontal: 20,
-    borderRadius: 8,
-    height: 650,
-  },
-  modalContent: {
-    marginHorizontal: 20,
-    marginTop: 20,
-    flex: 1,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#1D3557',
-  },
-  section: {
-    marginBottom: 16,
-    zIndex: 1,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#1D3557',
-  },
-  switchContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  switchLabel: {
-    marginRight: 8,
-    fontSize: 16,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    zIndex: 1,
-  },
-  searchProductsInputContainer: {
-    flex: 1,
-    marginRight: 8,
-  },
-  quantityInputContainer: {
-    width: '25%',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    padding: 10,
-    backgroundColor: '#FFF',
-  },
-  addItemButton: {
-    backgroundColor: '#457B9D',
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  addItemButtonText: {
-    color: '#FFF',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  itemsList: {
-    maxHeight: 150,
-    marginBottom: 16,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  itemText: {
-    color: '#333',
-  },
-  deleteText: {
-    color: '#E63946',
-    fontWeight: '600',
-  },
-  modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#457B9D',
-  },
-  saveButton: {
-    backgroundColor: '#457B9D',
-    borderRadius: 8,
-    paddingVertical: 12,
-    width: '45%',
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#E63946',
-    borderRadius: 8,
-    paddingVertical: 12,
-    width: '45%',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#FFF',
-    fontWeight: '600',
-    fontSize: 16,
   },
 })
 

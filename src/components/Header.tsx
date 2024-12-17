@@ -3,11 +3,11 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 
 type HeaderProps = {
   title: string
-  backButton?: boolean // Prop per mostrar el botó "Back"
-  onBackPress?: () => void // Funció quan es prem el botó "Back"
-  rightButtonSymbol?: string // Símbol del botó dret
-  onRightButtonPress?: () => void // Funció pel botó dret
-  rightButtonDisabled?: boolean // Nou prop per desactivar el botó dret
+  backButton?: boolean
+  onBackPress?: () => void
+  rightButtonSymbol?: string
+  onRightButtonPress?: () => void
+  rightButtonDisabled?: boolean
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -16,29 +16,26 @@ const Header: React.FC<HeaderProps> = ({
   onBackPress,
   rightButtonSymbol,
   onRightButtonPress,
-  rightButtonDisabled = false, // Valor per defecte: actiu
+  rightButtonDisabled = false,
 }) => {
   return (
     <View style={styles.headerContainer}>
-      {/* Botó Back */}
       {backButton && (
         <TouchableOpacity onPress={onBackPress} style={styles.backButton}>
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
       )}
 
-      {/* Títol */}
       <Text style={styles.headerTitle}>{title}</Text>
 
-      {/* Botó Dret */}
       {rightButtonSymbol && (
         <TouchableOpacity
           onPress={rightButtonDisabled ? undefined : onRightButtonPress}
           style={[
             styles.rightButton,
-            rightButtonDisabled && styles.rightButtonDisabled, // Estil deshabilitat
+            rightButtonDisabled && styles.rightButtonDisabled,
           ]}
-          disabled={rightButtonDisabled} // Desactiva la interacció
+          disabled={rightButtonDisabled}
         >
           <Text style={styles.rightButtonText}>{rightButtonSymbol}</Text>
         </TouchableOpacity>

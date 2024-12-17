@@ -144,7 +144,6 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
           onBackPress={() => navigation.goBack()}
           rightButtonSymbol="..."
           onRightButtonPress={() => {
-            // Obrir modal per editar només si no està finalized o paid
             if (!invoice.finalized && !invoice.paid) {
               setEditableInvoice({
                 customer_id: invoice.customer?.id ?? 0,

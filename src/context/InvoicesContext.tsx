@@ -6,11 +6,11 @@ import React, {
   useEffect,
   useCallback,
 } from 'react'
-import { Components } from '../api/generated/client'
+import { Components, Paths } from '../api/generated/client'
 import { useApi } from '../api'
 
 type InvoiceContextType = {
-  invoices: Components.Schemas.Invoice[]
+  invoices: Paths.GetInvoices.Responses.$200['invoices']
   loading: boolean
   fetchInvoices: () => Promise<void>
   updateInvoice: (

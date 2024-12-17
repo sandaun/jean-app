@@ -40,7 +40,6 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
   const api = useApi()
 
   useEffect(() => {
-    // Carregar clients des de l'API quan el modal s'obre
     const fetchCustomers = async () => {
       try {
         const { data } = await api.getSearchCustomers({ query: '' })
@@ -51,7 +50,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
     }
 
     fetchCustomers()
-  }, [])
+  }, [api])
 
   const selectedCustomerName = allCustomers.find(
     (customer) => customer.id === invoice.customer_id,
@@ -90,7 +89,6 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
             (newItem.quantity ?? 1),
         }
       } else {
-        // Si no existeix, afegeix una nova línia
         updatedLines.push(newItem)
       }
 
@@ -100,7 +98,6 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
       }
     })
 
-    // Neteja el nou item
     setNewItem({
       product_id: 0,
       label: '',
@@ -119,10 +116,8 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
       <View style={styles.modalContainer}>
         <View style={styles.modalContentWrapper}>
           <View style={styles.modalContent}>
-            {/* Títol del modal */}
             <Text style={styles.modalTitle}>Create Invoice</Text>
 
-            {/* Client i data de venciment */}
             <View style={styles.searchCustomersContainer}>
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Customer</Text>
@@ -149,7 +144,6 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
               />
             </View>
 
-            {/* Switches Paid i Finalized */}
             <View style={styles.switchContainer}>
               <View style={styles.switchRow}>
                 <Text style={styles.switchLabel}>Paid</Text>
@@ -171,7 +165,6 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
               </View>
             </View>
 
-            {/* Afegir producte i quantitat */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Add Items</Text>
               <View style={styles.row}>
@@ -219,7 +212,6 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
               </TouchableOpacity>
             </View>
 
-            {/* Llista d'items */}
             <ScrollView style={styles.itemsList}>
               {(invoice.invoice_lines_attributes ?? []).map((item, index) => (
                 <View key={index} style={styles.itemRow}>
@@ -245,7 +237,6 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
               ))}
             </ScrollView>
 
-            {/* Botons d'acció */}
             <View style={styles.modalActions}>
               <TouchableOpacity
                 onPress={() => onSave(invoice)}
