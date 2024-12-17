@@ -14,6 +14,8 @@ import SearchProducts from './SearchProducts'
 import { Components } from '../api/generated/client'
 import { useApi } from '../api'
 import { INITIAL_INVOICE_LINE } from '../constants/constants'
+import { formatToEuro } from '../utils/utils'
+import DatePicker from './DateTimePicker'
 
 interface InvoiceModalProps {
   visible: boolean
@@ -97,6 +99,13 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
     searchProductsRef.current?.clearSelection()
   }
 
+  const handleDate = (selectedDate: Date) => {
+    setInvoice({
+      ...invoice,
+      deadline: selectedDate.toISOString().split('T')[0],
+    })
+  }
+
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
       <View style={styles.modalContainer}>
@@ -120,13 +129,19 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Deadline</Text>
-              <TextInput
+              {/* <TextInput
                 style={styles.input}
                 placeholder="Deadline (YYYY-MM-DD)"
                 value={invoice.deadline || ''}
                 onChangeText={(text) =>
                   setInvoice({ ...invoice, deadline: text })
                 }
+                /> */}
+              <DatePicker
+                deadline={
+                  invoice.deadline ? new Date(invoice.deadline) : new Date()
+                }
+                handleDate={handleDate}
               />
             </View>
 
@@ -198,14 +213,25 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.itemsList}>
+            <ScrollView
+              style={styles.itemsList}
+              showsVerticalScrollIndicator={false}
+            >
               {(invoice.invoice_lines_attributes ?? []).map((item, index) => (
                 <View key={index} style={styles.itemRow}>
-                  <Text style={styles.itemText}>
-                    {item.product_id} - {item.label} (x
-                    {item.quantity || 1}) - Total:{' '}
-                    {(item.quantity || 1) * Number(item.price || 0)} €
-                  </Text>
+                  <View>
+                    <View style={styles.itemDetails}>
+                      <Text style={styles.itemLabel}>{item.label}</Text>
+                    </View>
+                    <View style={styles.itemDetails}>
+                      <Text style={styles.itemTotal}>
+                        Quantity: {item.quantity || 1} - Total:{' '}
+                        {formatToEuro(
+                          (item.quantity || 1) * Number(item.tax || 0),
+                        )}
+                      </Text>
+                    </View>
+                  </View>
                   <TouchableOpacity
                     onPress={() => {
                       const updatedItems = (
@@ -216,8 +242,9 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
                         invoice_lines_attributes: updatedItems,
                       }))
                     }}
+                    style={styles.deleteButton}
                   >
-                    <Text style={styles.deleteText}>Delete</Text>
+                    <Text style={styles.deleteText}>X</Text>
                   </TouchableOpacity>
                 </View>
               ))}
@@ -264,7 +291,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   section: {
-    marginBottom: 16,
+    marginBottom: 8,
     zIndex: 1,
   },
   sectionTitle: {
@@ -306,14 +333,6 @@ const styles = StyleSheet.create({
     maxHeight: 150,
     marginBottom: 16,
   },
-  itemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
   itemText: {
     color: '#333',
   },
@@ -335,9 +354,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 16,
   },
-  deleteText: {
-    color: '#E63946',
-    fontWeight: '600',
+  dateInputContainer: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    padding: 10,
+    backgroundColor: '#F9F9F9',
+    alignItems: 'center',
+  },
+  datePickerButton: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    padding: 10,
+    backgroundColor: '#F0F0F0',
+    alignItems: 'center',
+  },
+  datePickerText: {
+    fontSize: 16,
+    color: '#457B9D',
   },
   modalActions: {
     flexDirection: 'row',
@@ -365,6 +400,44 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontWeight: '600',
     fontSize: 16,
+  },
+  itemRow: {
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  itemDetails: {
+    marginBottom: 2,
+  },
+  itemLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1D3557',
+  },
+  itemQuantity: {
+    fontSize: 12,
+    color: '#457B9D',
+  },
+  itemTotal: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#6C757D',
+    marginBottom: 2,
+  },
+  deleteButton: {
+    backgroundColor: '#E63946',
+    borderRadius: 50,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteText: {
+    color: '#FFF',
+    fontWeight: 'bold',
   },
 })
 
