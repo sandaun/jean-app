@@ -35,7 +35,6 @@ const DatePicker: React.FC<DatePickerProps> = ({ deadline, handleDate }) => {
   ) => {
     if (selectedDate) {
       handleDate(selectedDate)
-      setShowPicker(false)
     }
   }
 
