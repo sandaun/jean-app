@@ -16,6 +16,7 @@ import { useApi } from '../api'
 import { INITIAL_INVOICE_LINE } from '../constants/constants'
 import { formatToEuro } from '../utils/utils'
 import DatePicker from './DateTimePicker'
+import CustomCheckbox from './CustomCheckbox'
 
 interface InvoiceModalProps {
   visible: boolean
@@ -69,7 +70,6 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
     if (!newItem.label) return
 
     setInvoice((prev) => {
-      // Comprova si ja existeix una línia amb el mateix product_id
       const existingLineIndex = prev.invoice_lines_attributes?.findIndex(
         (line) => line.product_id === newItem.product_id,
       )
@@ -77,7 +77,6 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
       let updatedLines = [...(prev.invoice_lines_attributes ?? [])]
 
       if (existingLineIndex !== undefined && existingLineIndex !== -1) {
-        // Si ja existeix, suma la quantitat
         updatedLines[existingLineIndex] = {
           ...updatedLines[existingLineIndex],
           quantity:
@@ -106,6 +105,8 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
     })
   }
 
+  const isEditable = !invoice.finalized
+
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
       <View style={styles.modalContainer}>
@@ -123,6 +124,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
                       : ''
                   }
                   onSelect={(id) => setInvoice({ ...invoice, customer_id: id })}
+                  disabled={!isEditable}
                 />
               </View>
             </View>
@@ -134,28 +136,24 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
                   invoice.deadline ? new Date(invoice.deadline) : new Date()
                 }
                 handleDate={handleDate}
+                disabled={!isEditable}
               />
             </View>
 
             <View style={styles.switchContainer}>
-              <View style={styles.switchRow}>
-                <Text style={styles.switchLabel}>Paid</Text>
-                <Switch
-                  value={invoice.paid}
-                  onValueChange={(value) =>
-                    setInvoice({ ...invoice, paid: value })
-                  }
-                />
-              </View>
-              <View style={styles.switchRow}>
-                <Text style={styles.switchLabel}>Finalized</Text>
-                <Switch
-                  value={invoice.finalized}
-                  onValueChange={(value) =>
-                    setInvoice({ ...invoice, finalized: value })
-                  }
-                />
-              </View>
+              <CustomCheckbox
+                label="Paid"
+                checked={invoice.paid ?? false}
+                onChange={(value) => setInvoice({ ...invoice, paid: value })}
+              />
+              <CustomCheckbox
+                label="Finalized"
+                checked={invoice.finalized ?? false}
+                onChange={(value) =>
+                  setInvoice({ ...invoice, finalized: value })
+                }
+                disabled={invoice.finalized}
+              />
             </View>
 
             <View style={styles.section}>
@@ -180,11 +178,12 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
                         })
                       }
                     }}
+                    disabled={!isEditable}
                   />
                 </View>
                 <View style={styles.quantityInputContainer}>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, !isEditable && styles.disabledInput]}
                     placeholder="Qty"
                     keyboardType="numeric"
                     value={newItem.quantity?.toString() || ''}
@@ -194,12 +193,17 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
                         quantity: text === '' ? undefined : Number(text),
                       })
                     }
+                    editable={isEditable}
                   />
                 </View>
               </View>
               <TouchableOpacity
                 onPress={handleAddItem}
-                style={styles.addItemButton}
+                style={[
+                  styles.addItemButton,
+                  !isEditable && styles.disabledButton,
+                ]}
+                disabled={!isEditable}
               >
                 <Text style={styles.addItemButtonText}>Add Item</Text>
               </TouchableOpacity>
@@ -234,7 +238,11 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
                         invoice_lines_attributes: updatedItems,
                       }))
                     }}
-                    style={styles.deleteButton}
+                    style={[
+                      styles.deleteButton,
+                      !isEditable && styles.disabledButton,
+                    ]}
+                    disabled={!isEditable}
                   >
                     <Text style={styles.deleteText}>X</Text>
                   </TouchableOpacity>
@@ -245,7 +253,11 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
             <View style={styles.modalActions}>
               <TouchableOpacity
                 onPress={() => onSave(invoice)}
-                style={styles.saveButton}
+                style={[
+                  styles.saveButton,
+                  !isEditable && styles.disabledButton,
+                ]}
+                disabled={!isEditable}
               >
                 <Text style={styles.buttonText}>Save</Text>
               </TouchableOpacity>
@@ -413,6 +425,13 @@ const styles = StyleSheet.create({
   deleteText: {
     color: '#FFF',
     fontWeight: 'bold',
+  },
+  disabledInput: {
+    backgroundColor: '#f5f5f5',
+    color: '#b0b0b0',
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 })
 
