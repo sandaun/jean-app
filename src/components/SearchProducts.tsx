@@ -19,13 +19,18 @@ type FetchProductsResponse = Paths.GetSearchProducts.Responses.$200['products']
 
 const DEBOUNCE_DELAY = 300
 
-const SearchProducts = forwardRef(
-  ({ onSelect }: { onSelect: (id: number) => void }, ref) => {
+type SearchProductsProps = {
+  onSelect: (id: number) => void
+  disabled?: boolean
+}
+
+const SearchProducts: React.FC<SearchProductsProps> = forwardRef(
+  ({ onSelect, disabled = false }, ref) => {
     const [query, setQuery] = useState('')
     const [allProducts, setAllProducts] = useState<FetchProductsResponse>([])
     const [filteredProducts, setFilteredProducts] =
       useState<FetchProductsResponse>([])
-    const [isProductSelected, setIsProductSelected] = useState(false) // Estat per controlar si un producte està seleccionat
+    const [isProductSelected, setIsProductSelected] = useState(false)
 
     const api = useApi()
 
@@ -47,7 +52,6 @@ const SearchProducts = forwardRef(
     useEffect(() => {
       const timeout = setTimeout(() => {
         if (query.length >= 1 && !isProductSelected) {
-          // Només filtrem si no hi ha producte seleccionat
           const lowerText = query.toLowerCase()
           const filtered = allProducts.filter((product) =>
             product.label.toLowerCase().startsWith(lowerText),
@@ -62,9 +66,9 @@ const SearchProducts = forwardRef(
     }, [query, allProducts, isProductSelected])
 
     const handleSelectProduct = (product: FetchProductsResponse[0]) => {
-      setQuery(product.label) // Mostrem el nom del producte al camp d’entrada
-      onSelect(product.id) // Notifiquem al component pare
-      setIsProductSelected(true) // Amaguem la llista
+      setQuery(product.label)
+      onSelect(product.id)
+      setIsProductSelected(true)
     }
 
     useImperativeHandle(ref, () => ({
@@ -77,15 +81,16 @@ const SearchProducts = forwardRef(
     return (
       <KeyboardAvoidingView behavior="padding" style={styles.container}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, disabled && styles.disabledInput]}
           placeholder="Search products"
           value={query}
           onChangeText={(text) => {
             setQuery(text)
             setIsProductSelected(false)
           }}
+          editable={!disabled}
         />
-        {!isProductSelected && (
+        {!disabled && !isProductSelected && (
           <View style={styles.listContainer}>
             {query.length > 0 && filteredProducts.length > 0 && (
               <FlatList
@@ -124,6 +129,10 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     borderRadius: 8,
     padding: 10,
+  },
+  disabledInput: {
+    backgroundColor: '#f5f5f5',
+    color: '#b0b0b0',
   },
   listContainer: {
     position: 'absolute',

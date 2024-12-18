@@ -13,14 +13,18 @@ import { Paths } from '../api/generated/client'
 type FetchCustomersResponse =
   Paths.GetSearchCustomers.Responses.$200['customers']
 
-const DEBOUNCE_DELAY = 300
-
-const SearchCustomers = ({
-  onSelect,
-  selectedCustomerName,
-}: {
+type SearchCustomersProps = {
   onSelect: (id: number) => void
   selectedCustomerName?: string
+  disabled?: boolean
+}
+
+const DEBOUNCE_DELAY = 300
+
+const SearchCustomers: React.FC<SearchCustomersProps> = ({
+  onSelect,
+  selectedCustomerName,
+  disabled = false,
 }) => {
   const [query, setQuery] = useState(selectedCustomerName || '')
   const [allCustomers, setAllCustomers] = useState<FetchCustomersResponse>([])
@@ -28,7 +32,6 @@ const SearchCustomers = ({
     useState<FetchCustomersResponse>([])
   const api = useApi()
 
-  // Sincronitza el nom del client seleccionat quan canviï
   useEffect(() => {
     if (selectedCustomerName) {
       setQuery(selectedCustomerName)
@@ -85,40 +88,43 @@ const SearchCustomers = ({
   return (
     <KeyboardAvoidingView behavior="padding" style={styles.container}>
       <TextInput
-        style={styles.input}
+        style={[styles.input, disabled && styles.disabledInput]}
         placeholder="Search customers"
         value={query}
         onChangeText={(text) => {
           setQuery(text)
         }}
+        editable={!disabled}
       />
-      <View style={styles.listContainer}>
-        {query.length > 0 && filteredCustomers.length > 0 && (
-          <FlatList
-            data={filteredCustomers}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <Text
-                style={styles.item}
-                onPress={() => handleSelectCustomer(item)}
-              >
-                {item.first_name} {item.last_name}
-              </Text>
-            )}
-            ListEmptyComponent={
-              !isQueryMatchingCustomer() ? (
-                <Text style={styles.emptyText}>No results found</Text>
-              ) : null
-            }
-            style={styles.list}
-          />
-        )}
-        {query.length > 0 &&
-          filteredCustomers.length === 0 &&
-          !isQueryMatchingCustomer() && (
-            <Text style={styles.emptyText}>No results found</Text>
+      {!disabled && (
+        <View style={styles.listContainer}>
+          {query.length > 0 && filteredCustomers.length > 0 && (
+            <FlatList
+              data={filteredCustomers}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <Text
+                  style={styles.item}
+                  onPress={() => handleSelectCustomer(item)}
+                >
+                  {item.first_name} {item.last_name}
+                </Text>
+              )}
+              ListEmptyComponent={
+                !isQueryMatchingCustomer() ? (
+                  <Text style={styles.emptyText}>No results found</Text>
+                ) : null
+              }
+              style={styles.list}
+            />
           )}
-      </View>
+          {query.length > 0 &&
+            filteredCustomers.length === 0 &&
+            !isQueryMatchingCustomer() && (
+              <Text style={styles.emptyText}>No results found</Text>
+            )}
+        </View>
+      )}
     </KeyboardAvoidingView>
   )
 }
@@ -133,6 +139,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     marginBottom: 8,
+  },
+  disabledInput: {
+    backgroundColor: '#f5f5f5',
+    color: '#b0b0b0',
   },
   listContainer: {
     position: 'absolute',

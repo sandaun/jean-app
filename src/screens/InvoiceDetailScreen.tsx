@@ -185,7 +185,9 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
     )
   }
 
-  const buttonDisabled = invoice.finalized || invoice.paid
+  const invoiceFinalized = invoice.finalized
+  const invoicePaid = invoice.paid
+  const buttonDisabled = invoiceFinalized || invoicePaid
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -196,7 +198,7 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
           onBackPress={() => navigation.goBack()}
           rightButtonSymbol="..."
           onRightButtonPress={() => {
-            if (!invoice.finalized && !invoice.paid) {
+            if (!invoicePaid) {
               setEditableInvoice({
                 customer_id: invoice.customer?.id ?? 0,
                 date: invoice.date,
@@ -216,7 +218,7 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
               setModalVisible(true)
             }
           }}
-          rightButtonDisabled={buttonDisabled}
+          rightButtonDisabled={invoicePaid}
         />
         <Text style={styles.sectionTitle}>Invoice Details</Text>
         <View style={styles.details}>
@@ -247,10 +249,7 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
 
         <Text style={styles.sectionTitle}>Invoice Items</Text>
         <View style={styles.items}>
-          <ScrollView
-            style={styles.itemsScrollViewContainer}
-            showsVerticalScrollIndicator={false}
-          >
+          <ScrollView showsVerticalScrollIndicator={false}>
             {invoice.invoice_lines.map((line) => (
               <View key={line.id} style={styles.itemRow}>
                 <ItemRow label="ID" value={line.id} />
@@ -333,9 +332,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
   },
-  itemsScrollViewContainer: {
-    // flex: 1,
-  },
   items: {
     flex: 1,
     marginBottom: 16,
@@ -376,7 +372,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   buttonDisabled: {
-    backgroundColor: '#A8A8A8',
+    opacity: 0.5,
   },
   actionText: {
     color: '#FFF',

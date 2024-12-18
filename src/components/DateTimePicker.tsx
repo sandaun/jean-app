@@ -14,9 +14,14 @@ import DateTimePicker, {
 interface DatePickerProps {
   deadline: Date
   handleDate: (date: Date) => void
+  disabled?: boolean
 }
 
-const DatePicker: React.FC<DatePickerProps> = ({ deadline, handleDate }) => {
+const DatePicker: React.FC<DatePickerProps> = ({
+  deadline,
+  handleDate,
+  disabled = false,
+}) => {
   const [showPicker, setShowPicker] = useState(false)
 
   const handleAndroidDateChange = (
@@ -41,15 +46,18 @@ const DatePicker: React.FC<DatePickerProps> = ({ deadline, handleDate }) => {
   return (
     <View style={styles.datePickerContainer}>
       <TouchableOpacity
-        onPress={() => setShowPicker(true)}
-        style={styles.button}
+        onPress={() => !disabled && setShowPicker(true)}
+        style={[styles.button, disabled && styles.disabledButton]}
+        disabled={disabled}
       >
-        <Text style={[styles.buttonText]}>
+        <Text
+          style={[styles.buttonText, disabled && styles.disabledButtonText]}
+        >
           {deadline ? deadline.toISOString().split('T')[0] : 'Select Date'}
         </Text>
       </TouchableOpacity>
 
-      {Platform.OS === 'android' && showPicker && (
+      {!disabled && Platform.OS === 'android' && showPicker && (
         <DateTimePicker
           mode="date"
           value={deadline}
@@ -57,7 +65,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ deadline, handleDate }) => {
         />
       )}
 
-      {Platform.OS === 'ios' && showPicker && (
+      {!disabled && Platform.OS === 'ios' && showPicker && (
         <Modal visible={true} transparent={true} animationType="slide">
           <View style={styles.modalContainer}>
             <View style={styles.pickerContainer}>
@@ -92,6 +100,13 @@ const styles = StyleSheet.create({
   buttonText: {
     // color: '#457B9D',
     // fontWeight: 'bold',
+  },
+  disabledButton: {
+    backgroundColor: '#F5F5F5',
+    borderColor: '#E0E0E0',
+  },
+  disabledButtonText: {
+    color: '#B0B0B0',
   },
   modalContainer: {
     flex: 1,
