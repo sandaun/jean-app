@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   rightButtonDisabled: {
-    backgroundColor: '#A8A8A8',
+    opacity: 0.5,
   },
   rightButtonText: {
     color: '#FFF',
