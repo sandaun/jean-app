@@ -158,6 +158,13 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
 
       const invoiceToUpdate = {
         id: invoiceId,
+        customer_id: updatedInvoice.customer_id,
+        finalized: updatedInvoice.finalized || false,
+        paid: updatedInvoice.paid || false,
+        date: updatedInvoice.date || null,
+        deadline: updatedInvoice.deadline || null,
+        total: '0',
+        tax: '0',
         invoice_lines_attributes: mergedInvoiceLines,
       }
 
@@ -177,6 +184,8 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
       </SafeAreaView>
     )
   }
+
+  const buttonDisabled = invoice.finalized || invoice.paid
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -207,7 +216,7 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
               setModalVisible(true)
             }
           }}
-          rightButtonDisabled={invoice.finalized || invoice.paid}
+          rightButtonDisabled={buttonDisabled}
         />
         <Text style={styles.sectionTitle}>Invoice Details</Text>
         <View style={styles.details}>
@@ -261,9 +270,9 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
             onPress={handleFinalize}
             style={[
               styles.finalizeButton,
-              invoice.finalized && styles.buttonDisabled,
+              buttonDisabled && styles.buttonDisabled,
             ]}
-            disabled={invoice.finalized}
+            disabled={buttonDisabled}
           >
             <Text style={styles.actionText}>Finalize Invoice</Text>
           </TouchableOpacity>
@@ -271,9 +280,9 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
             onPress={handleDelete}
             style={[
               styles.deleteButton,
-              invoice.finalized && styles.buttonDisabled,
+              buttonDisabled && styles.buttonDisabled,
             ]}
-            disabled={invoice.finalized}
+            disabled={buttonDisabled}
           >
             <Text style={styles.actionText}>Delete Invoice</Text>
           </TouchableOpacity>
