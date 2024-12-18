@@ -253,11 +253,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
             <View style={styles.modalActions}>
               <TouchableOpacity
                 onPress={() => onSave(invoice)}
-                style={[
-                  styles.saveButton,
-                  !isEditable && styles.disabledButton,
-                ]}
-                disabled={!isEditable}
+                style={[styles.saveButton]}
               >
                 <Text style={styles.buttonText}>Save</Text>
               </TouchableOpacity>
