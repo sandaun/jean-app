@@ -4,6 +4,7 @@ import {
   Text,
   Modal,
   TextInput,
+  Switch,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
@@ -43,8 +44,6 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
   >([])
   const [newItem, setNewItem] =
     useState<Components.Schemas.InvoiceLineCreatePayload>(INITIAL_INVOICE_LINE)
-  const [tempInvoice, setTempInvoice] =
-    useState<Components.Schemas.InvoiceCreatePayload>({ ...invoice })
 
   const searchProductsRef = useRef<{ clearSelection: () => void }>(null)
 
@@ -63,20 +62,14 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
     fetchCustomers()
   }, [api])
 
-  useEffect(() => {
-    if (visible) {
-      setTempInvoice({ ...invoice })
-    }
-  }, [visible, invoice])
-
   const selectedCustomerName = allCustomers.find(
-    (customer) => customer.id === tempInvoice.customer_id,
+    (customer) => customer.id === invoice.customer_id,
   )
 
   const handleAddItem = () => {
     if (!newItem.label) return
 
-    setTempInvoice((prev) => {
+    setInvoice((prev) => {
       const existingLineIndex = prev.invoice_lines_attributes?.findIndex(
         (line) => line.product_id === newItem.product_id,
       )
@@ -106,13 +99,13 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
   }
 
   const handleDate = (selectedDate: Date) => {
-    setTempInvoice({
-      ...tempInvoice,
+    setInvoice({
+      ...invoice,
       deadline: selectedDate.toISOString().split('T')[0],
     })
   }
 
-  const isEditable = !tempInvoice.finalized
+  const isEditable = !invoice.finalized
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
@@ -130,9 +123,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
                       ? `${selectedCustomerName.first_name} ${selectedCustomerName.last_name}`
                       : ''
                   }
-                  onSelect={(id) =>
-                    setTempInvoice({ ...tempInvoice, customer_id: id })
-                  }
+                  onSelect={(id) => setInvoice({ ...invoice, customer_id: id })}
                   disabled={!isEditable}
                 />
               </View>
@@ -142,9 +133,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
               <Text style={styles.sectionTitle}>Deadline</Text>
               <DatePicker
                 deadline={
-                  tempInvoice.deadline
-                    ? new Date(tempInvoice.deadline)
-                    : new Date()
+                  invoice.deadline ? new Date(invoice.deadline) : new Date()
                 }
                 handleDate={handleDate}
                 disabled={!isEditable}
@@ -210,58 +199,54 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
               style={styles.itemsList}
               showsVerticalScrollIndicator={false}
             >
-              {(tempInvoice.invoice_lines_attributes ?? []).map(
-                (item, index) => (
-                  <View key={index} style={styles.itemRow}>
-                    <View>
-                      <View style={styles.itemDetails}>
-                        <Text style={styles.itemLabel}>{item.label}</Text>
-                      </View>
-                      <View style={styles.itemDetails}>
-                        <Text style={styles.itemTotal}>
-                          Quantity: {item.quantity || 1} - Total:{' '}
-                          {formatToEuro(
-                            (item.quantity || 1) * Number(item.tax || 0),
-                          )}
-                        </Text>
-                      </View>
+              {(invoice.invoice_lines_attributes ?? []).map((item, index) => (
+                <View key={index} style={styles.itemRow}>
+                  <View>
+                    <View style={styles.itemDetails}>
+                      <Text style={styles.itemLabel}>{item.label}</Text>
                     </View>
-                    <TouchableOpacity
-                      onPress={() => {
-                        const updatedItems = (
-                          tempInvoice.invoice_lines_attributes ?? []
-                        ).filter((_, i) => i !== index)
-                        setTempInvoice((prev) => ({
-                          ...prev,
-                          invoice_lines_attributes: updatedItems,
-                        }))
-                      }}
-                      style={[
-                        styles.deleteButton,
-                        !isEditable && styles.disabledButton,
-                      ]}
-                      disabled={!isEditable}
-                    >
-                      <Text style={styles.deleteText}>X</Text>
-                    </TouchableOpacity>
+                    <View style={styles.itemDetails}>
+                      <Text style={styles.itemTotal}>
+                        Quantity: {item.quantity || 1} - Total:{' '}
+                        {formatToEuro(
+                          (item.quantity || 1) * Number(item.tax || 0),
+                        )}
+                      </Text>
+                    </View>
                   </View>
-                ),
-              )}
+                  <TouchableOpacity
+                    onPress={() => {
+                      const updatedItems = (
+                        invoice.invoice_lines_attributes ?? []
+                      ).filter((_, i) => i !== index)
+                      setInvoice((prev) => ({
+                        ...prev,
+                        invoice_lines_attributes: updatedItems,
+                      }))
+                    }}
+                    style={[
+                      styles.deleteButton,
+                      !isEditable && styles.disabledButton,
+                    ]}
+                    disabled={!isEditable}
+                  >
+                    <Text style={styles.deleteText}>X</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
             </ScrollView>
 
             <View style={styles.switchContainer}>
               <CustomCheckbox
                 label="Paid"
-                checked={tempInvoice.paid ?? false}
-                onChange={(value) =>
-                  setTempInvoice({ ...tempInvoice, paid: value })
-                }
+                checked={invoice.paid ?? false}
+                onChange={(value) => setInvoice({ ...invoice, paid: value })}
               />
               <CustomCheckbox
                 label="Finalized"
-                checked={tempInvoice.finalized ?? false}
+                checked={invoice.finalized ?? false}
                 onChange={(value) =>
-                  setTempInvoice({ ...tempInvoice, finalized: value })
+                  setInvoice({ ...invoice, finalized: value })
                 }
                 disabled={invoice.finalized}
               />
@@ -269,10 +254,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
 
             <View style={styles.modalActions}>
               <TouchableOpacity
-                onPress={() => {
-                  setInvoice(tempInvoice)
-                  onSave(tempInvoice)
-                }}
+                onPress={() => onSave(invoice)}
                 style={[styles.saveButton]}
               >
                 <Text style={styles.buttonText}>Save</Text>
@@ -340,6 +322,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginTop: 8,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  switchLabel: {
+    marginRight: 8,
+    fontSize: 16,
   },
   row: {
     flexDirection: 'row',
