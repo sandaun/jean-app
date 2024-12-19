@@ -57,7 +57,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    color: '#333',
+    color: '#1D3557',
+    fontWeight: '600',
   },
   disabledLabel: {
     color: '#B0B0B0',

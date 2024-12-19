@@ -101,8 +101,8 @@ const InvoicesList = () => {
             <Text style={styles.invoiceItemName}>
               {item.customer?.first_name} {item.customer?.last_name}
             </Text>
-            <Text style={styles.invoiceItemDate}>Invoice #{item.id}</Text>
-            <Text style={styles.invoiceItemDate}>Date: {item.date}</Text>
+            <Text style={styles.invoiceItemData}>Invoice #{item.id}</Text>
+            <Text style={styles.invoiceItemData}>Date: {item.date}</Text>
           </View>
           <View style={styles.invoiceItemTotalContainer}>
             <Text style={styles.invoiceItemTotal}>
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1D3557',
   },
-  invoiceItemDate: {
+  invoiceItemData: {
     fontSize: 14,
     color: '#6C757D',
   },
