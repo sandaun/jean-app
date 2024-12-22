@@ -12,6 +12,7 @@
     "openapi:convert": "redocly bundle ./openapi/schema.yml -o ./src/api/generated/schema.json --format json"
   },
   "dependencies": {
+    "@react-native-community/datetimepicker": "7.6.2",
     "@react-navigation/native": "6.1.14",
     "@react-navigation/native-stack": "6.9.22",
     "@tamagui/babel-plugin": "^1.91.1",

@@ -1,10 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import {
   View,
   Text,
   Modal,
   TextInput,
-  Switch,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
@@ -12,57 +11,48 @@ import {
 import SearchCustomers from './SearchCustomers'
 import SearchProducts from './SearchProducts'
 import { Components } from '../api/generated/client'
-import { useApi } from '../api'
-import { INITIAL_INVOICE_LINE } from '../constants/constants'
+import {
+  INITIAL_INVOICE_LINE,
+  INITIAL_INVOICE_LINE_UPDATE,
+} from '../constants/constants'
 import { formatToEuro } from '../utils/utils'
 import DatePicker from './DateTimePicker'
 import CustomCheckbox from './CustomCheckbox'
+import {
+  useFetchCustomers,
+  useFetchProducts,
+} from '../services/invoices/useInvoices'
 
-interface InvoiceModalProps {
+interface InvoiceModalUpdateProps {
   visible: boolean
-  invoice: Components.Schemas.InvoiceCreatePayload
-  allProducts: Components.Schemas.Product[]
+  invoice: Components.Schemas.InvoiceUpdatePayload
   onClose: () => void
-  onSave: (invoice: Components.Schemas.InvoiceCreatePayload) => void
+  onSave: (invoice: Components.Schemas.InvoiceUpdatePayload) => void
   setInvoice: React.Dispatch<
-    React.SetStateAction<Components.Schemas.InvoiceCreatePayload>
+    React.SetStateAction<Components.Schemas.InvoiceUpdatePayload>
   >
   title: string
 }
 
-const InvoiceModal: React.FC<InvoiceModalProps> = ({
+const InvoiceModalUpdate: React.FC<InvoiceModalUpdateProps> = ({
   visible,
   invoice,
-  allProducts,
   onClose,
   onSave,
   setInvoice,
   title,
 }) => {
-  const [allCustomers, setAllCustomers] = useState<
-    Components.Schemas.Customer[]
-  >([])
   const [newItem, setNewItem] =
-    useState<Components.Schemas.InvoiceLineCreatePayload>(INITIAL_INVOICE_LINE)
+    useState<Components.Schemas.InvoiceLineUpdatePayload>(
+      INITIAL_INVOICE_LINE_UPDATE,
+    )
 
   const searchProductsRef = useRef<{ clearSelection: () => void }>(null)
 
-  const api = useApi()
+  const { data: customers = [] } = useFetchCustomers()
+  const { data: products = [] } = useFetchProducts()
 
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        const { data } = await api.getSearchCustomers({ query: '' })
-        setAllCustomers(data.customers)
-      } catch (error) {
-        console.error('Error fetching customers:', error)
-      }
-    }
-
-    fetchCustomers()
-  }, [api])
-
-  const selectedCustomerName = allCustomers.find(
+  const selectedCustomerName = customers.find(
     (customer) => customer.id === invoice.customer_id,
   )
 
@@ -105,6 +95,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
     })
   }
 
+  // const isEditable = !invoice.finalized
   const isEditable = !invoice.finalized
 
   return (
@@ -148,7 +139,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
                   <SearchProducts
                     ref={searchProductsRef}
                     onSelect={(productId) => {
-                      const selectedProduct = allProducts.find(
+                      const selectedProduct = products.find(
                         (p) => p.id === productId,
                       )
                       if (selectedProduct) {
@@ -439,4 +430,4 @@ const styles = StyleSheet.create({
   },
 })
 
-export default InvoiceModal
+export default InvoiceModalUpdate

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import {
   View,
   Text,
@@ -21,11 +21,14 @@ import Header from '../components/Header'
 import DetailRow from '../components/DetailRow'
 import StatusPills from '../components/StatusPills'
 import ItemRow from '../components/ItemRow'
-import { useInvoices } from '../context/InvoicesContext'
+import { getInitialUpdateInvoice } from '../constants/constants'
+import {
+  useDeleteInvoice,
+  useFetchInvoiceById,
+  useUpdateInvoice,
+} from '../services/invoices/useInvoices'
 import { Components } from '../api/generated/client'
-import InvoiceModal from '../components/InvoiceModal'
-import { useApi } from '../api'
-import { getInitialInvoice } from '../constants/constants'
+import InvoiceModalUpdate from '../components/InvoiceModalUpdate'
 
 type InvoiceDetailScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -45,42 +48,18 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
   route,
   navigation,
 }) => {
-  const emptyInvoice: Components.Schemas.InvoiceCreatePayload =
-    getInitialInvoice()
-
   const { invoiceId } = route.params
+  const emptyInvoice = getInitialUpdateInvoice()
 
   const [modalVisible, setModalVisible] = useState(false)
-  const [editableInvoice, setEditableInvoice] =
-    useState<Components.Schemas.InvoiceCreatePayload>(emptyInvoice)
-  const [allProducts, setAllProducts] = useState<Components.Schemas.Product[]>(
-    [],
-  )
+  const [editableInvoice, setEditableInvoice] = useState(emptyInvoice)
 
-  const api = useApi()
+  const { data: invoice, isLoading } = useFetchInvoiceById(invoiceId)
 
-  const { invoices, deleteInvoice, finalizeInvoice, updateInvoice } =
-    useInvoices()
+  const deleteInvoiceMutation = useDeleteInvoice()
+  const updateInvoiceMutation = useUpdateInvoice()
 
-  const fetchProducts = useCallback(async () => {
-    try {
-      const { data } = await api.getSearchProducts({
-        query: '',
-        per_page: 1000,
-      })
-      setAllProducts(data.products)
-    } catch (error) {
-      console.error('Error fetching products:', error)
-    }
-  }, [api])
-
-  useEffect(() => {
-    fetchProducts()
-  }, [fetchProducts])
-
-  const invoice = invoices.find((inv) => inv.id === invoiceId)
-
-  const handleDelete = async () => {
+  const handleDelete = () => {
     Alert.alert(
       'Delete Invoice',
       'Are you sure you want to delete this invoice?',
@@ -91,7 +70,7 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteInvoice(invoiceId)
+              await deleteInvoiceMutation.mutateAsync(invoiceId)
               Alert.alert('Success', 'Invoice deleted successfully.')
               navigation.canGoBack()
                 ? navigation.goBack()
@@ -106,23 +85,8 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
     )
   }
 
-  const handleFinalize = async () => {
-    if (!invoice?.finalized) {
-      try {
-        await finalizeInvoice(invoiceId)
-        Alert.alert('Success', 'Invoice finalized successfully.')
-        navigation.canGoBack()
-          ? navigation.goBack()
-          : navigation.navigate('InvoicesList')
-      } catch (error) {
-        console.error('Error finalizing invoice:', error)
-        Alert.alert('Error', 'Failed to finalize the invoice.')
-      }
-    }
-  }
-
   const handleSaveInvoice = async (
-    updatedInvoice: Components.Schemas.InvoiceCreatePayload,
+    updatedInvoice: Components.Schemas.InvoiceUpdatePayload,
     existingLines: Components.Schemas.InvoiceLine[],
   ) => {
     try {
@@ -135,7 +99,6 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
         const matchingLine = existingLines.find(
           (existing) => existing.product_id === line.product_id,
         )
-
         if (matchingLine) {
           mergedInvoiceLines.push({
             id: matchingLine.id,
@@ -157,7 +120,7 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
       })
 
       const invoiceToUpdate = {
-        id: invoiceId,
+        id: updatedInvoice.id || invoiceId,
         customer_id: updatedInvoice.customer_id,
         finalized: updatedInvoice.finalized || false,
         paid: updatedInvoice.paid || false,
@@ -168,14 +131,15 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
         invoice_lines_attributes: mergedInvoiceLines,
       }
 
-      await updateInvoice(invoiceToUpdate)
+      await updateInvoiceMutation.mutateAsync(invoiceToUpdate)
       setModalVisible(false)
     } catch (error) {
       console.error('Error updating invoice:', error)
+      Alert.alert('Error', 'Failed to update the invoice.')
     }
   }
 
-  if (!invoice) {
+  if (isLoading || !invoice) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loader}>
@@ -189,6 +153,17 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
   const invoicePaid = invoice.paid
   const buttonDisabled = invoiceFinalized || invoicePaid
 
+  const handleOpenModal = () => {
+    if (!invoice) return
+
+    setEditableInvoice({
+      ...invoice,
+      customer_id: invoice.customer_id ?? undefined,
+    })
+
+    setModalVisible(true)
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -197,27 +172,7 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
           backButton={true}
           onBackPress={() => navigation.goBack()}
           rightButtonSymbol="..."
-          onRightButtonPress={() => {
-            if (!invoicePaid) {
-              setEditableInvoice({
-                customer_id: invoice.customer?.id ?? 0,
-                date: invoice.date,
-                deadline: invoice.deadline,
-                paid: invoice.paid,
-                finalized: invoice.finalized,
-                invoice_lines_attributes: invoice.invoice_lines.map((line) => ({
-                  product_id: line.product_id,
-                  label: line.label,
-                  quantity: line.quantity,
-                  unit: line.unit,
-                  vat_rate: line.vat_rate,
-                  price: line.price.toString(),
-                  tax: line.tax.toString(),
-                })),
-              })
-              setModalVisible(true)
-            }
-          }}
+          onRightButtonPress={handleOpenModal}
           rightButtonDisabled={invoicePaid}
         />
         <Text style={styles.sectionTitle}>Invoice Details</Text>
@@ -266,7 +221,15 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
         </View>
         <View style={styles.actions}>
           <TouchableOpacity
-            onPress={handleFinalize}
+            onPress={() =>
+              handleSaveInvoice(
+                {
+                  ...invoice,
+                  customer_id: invoice.customer_id ?? undefined,
+                },
+                invoice.invoice_lines,
+              )
+            }
             style={[
               styles.finalizeButton,
               buttonDisabled && styles.buttonDisabled,
@@ -287,12 +250,11 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
           </TouchableOpacity>
         </View>
         {editableInvoice && (
-          <InvoiceModal
+          <InvoiceModalUpdate
             title="Edit Invoice"
             visible={modalVisible}
             invoice={editableInvoice}
             setInvoice={setEditableInvoice}
-            allProducts={allProducts}
             onClose={() => setModalVisible(false)}
             onSave={(updatedInvoice) =>
               handleSaveInvoice(updatedInvoice, invoice.invoice_lines)
