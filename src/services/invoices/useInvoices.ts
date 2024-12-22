@@ -3,10 +3,9 @@ import { useApi } from '../../api'
 import { Components } from '../../api/generated/client'
 
 export interface InvoiceWithCustomer extends Components.Schemas.Invoice {
-  customer?: Components.Schemas.Customer // Opcional, segons la resposta
+  customer?: Components.Schemas.Customer
 }
 
-// Fetch invoices
 export const useFetchInvoices = () => {
   const api = useApi()
   return useQuery<InvoiceWithCustomer[]>({
@@ -19,7 +18,6 @@ export const useFetchInvoices = () => {
   })
 }
 
-// Fetch a single invoice by ID
 export const useFetchInvoiceById = (id: number) => {
   const api = useApi()
   return useQuery<InvoiceWithCustomer>({
@@ -28,12 +26,11 @@ export const useFetchInvoiceById = (id: number) => {
       const { data } = await api.getInvoice({ id })
       return data
     },
-    enabled: !!id, // Només s'executa si hi ha un `id`
+    enabled: !!id,
     staleTime: 5 * 60 * 1000,
   })
 }
 
-// Fetch customers
 export const useFetchCustomers = () => {
   const api = useApi()
   return useQuery<Components.Schemas.Customer[]>({
@@ -46,7 +43,6 @@ export const useFetchCustomers = () => {
   })
 }
 
-// Fetch products
 export const useFetchProducts = () => {
   const api = useApi()
   return useQuery<Components.Schemas.Product[]>({
@@ -59,7 +55,6 @@ export const useFetchProducts = () => {
   })
 }
 
-// Mutation to create an invoice
 export const useCreateInvoice = () => {
   const api = useApi()
   const queryClient = useQueryClient()
@@ -76,7 +71,6 @@ export const useCreateInvoice = () => {
   })
 }
 
-// Mutation to update an invoice
 export const useUpdateInvoice = () => {
   const api = useApi()
   const queryClient = useQueryClient()
@@ -101,7 +95,6 @@ export const useUpdateInvoice = () => {
   })
 }
 
-// Mutation to delete an invoice
 export const useDeleteInvoice = () => {
   const api = useApi()
   const queryClient = useQueryClient()
@@ -118,7 +111,6 @@ export const useDeleteInvoice = () => {
   })
 }
 
-// Mutation to finalize an invoice
 export const useFinalizeInvoice = () => {
   const api = useApi()
   const queryClient = useQueryClient()
@@ -126,14 +118,23 @@ export const useFinalizeInvoice = () => {
   return useMutation({
     mutationFn: async (id: number) => {
       const { data: invoice } = await api.getInvoice({ id })
-      await api.putInvoice({ id }, { invoice: { ...invoice, finalized: true } })
+      await api.putInvoice(
+        { id },
+        {
+          invoice: {
+            ...invoice,
+            finalized: true,
+            customer_id: invoice.customer_id ?? undefined,
+          },
+        },
+      )
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['invoices'],
       })
       queryClient.invalidateQueries({
-        queryKey: ['invoice', id],
+        queryKey: ['invoice', variables],
       })
     },
   })
