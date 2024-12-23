@@ -62,6 +62,7 @@ const InvoicesList = () => {
         onPress={() =>
           navigation.navigate('InvoiceDetail', { invoiceId: item.id })
         }
+        testID={`invoice-item-${item.id}`}
       >
         <View style={styles.invoiceItem}>
           <View style={styles.invoiceItemNameContainer}>
@@ -101,6 +102,7 @@ const InvoicesList = () => {
             size="large"
             color="#007bff"
             style={styles.loader}
+            testID="loading-indicator"
           />
         ) : (
           <FlatList

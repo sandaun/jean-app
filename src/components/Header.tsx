@@ -19,9 +19,13 @@ const Header: React.FC<HeaderProps> = ({
   rightButtonDisabled = false,
 }) => {
   return (
-    <View style={styles.headerContainer}>
+    <View style={styles.headerContainer} testID={'header-component'}>
       {backButton && (
-        <TouchableOpacity onPress={onBackPress} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={onBackPress}
+          style={styles.backButton}
+          testID="back-button"
+        >
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
       )}
@@ -36,6 +40,7 @@ const Header: React.FC<HeaderProps> = ({
             rightButtonDisabled && styles.rightButtonDisabled,
           ]}
           disabled={rightButtonDisabled}
+          testID="right-button"
         >
           <Text style={styles.rightButtonText}>{rightButtonSymbol}</Text>
         </TouchableOpacity>

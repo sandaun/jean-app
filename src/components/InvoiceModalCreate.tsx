@@ -91,7 +91,12 @@ const InvoiceModalCreate: React.FC<InvoiceModalCreateProps> = ({
   }
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent={true}
+      testID={'invoice-modal-create'}
+    >
       <View style={styles.modalContainer}>
         <View style={styles.modalContentWrapper}>
           <View style={styles.modalContent}>
@@ -227,10 +232,15 @@ const InvoiceModalCreate: React.FC<InvoiceModalCreateProps> = ({
               <TouchableOpacity
                 onPress={() => onSave(invoice)}
                 style={[styles.saveButton]}
+                testID="save-invoice-button"
               >
                 <Text style={styles.buttonText}>Save</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
+              <TouchableOpacity
+                onPress={onClose}
+                style={styles.cancelButton}
+                testID="cancel-invoice-button"
+              >
                 <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
