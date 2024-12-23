@@ -75,6 +75,14 @@ jest.mock('../../services/invoices/useInvoices', () => ({
   useFetchInvoiceById: jest.fn(),
   useDeleteInvoice: jest.fn(),
   useUpdateInvoice: jest.fn(),
+  useFetchCustomers: jest.fn().mockReturnValue({
+    data: [],
+    isLoading: false,
+  }),
+  useFetchProducts: jest.fn().mockReturnValue({
+    data: [],
+    isLoading: false,
+  }),
 }))
 
 jest.mock('@react-navigation/native', () => ({
@@ -93,6 +101,8 @@ const mockApi = {
   isFocused: jest.fn(),
   getId: jest.fn(),
   getState: jest.fn(),
+  getSearchCustomers: jest.fn().mockResolvedValue({ data: { customers: [] } }),
+  getSearchProducts: jest.fn().mockResolvedValue({ data: { products: [] } }),
 }
 
 jest.mock('../../api', () => ({
