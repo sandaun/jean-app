@@ -95,7 +95,6 @@ const InvoiceModalUpdate: React.FC<InvoiceModalUpdateProps> = ({
     })
   }
 
-  // const isEditable = !invoice.finalized
   const isEditable = !invoice.finalized
 
   return (
@@ -207,9 +206,10 @@ const InvoiceModalUpdate: React.FC<InvoiceModalUpdateProps> = ({
                   </View>
                   <TouchableOpacity
                     onPress={() => {
-                      const updatedItems = (
-                        invoice.invoice_lines_attributes ?? []
-                      ).filter((_, i) => i !== index)
+                      const updatedItems =
+                        invoice.invoice_lines_attributes?.filter(
+                          (line, i) => i !== index,
+                        )
                       setInvoice((prev) => ({
                         ...prev,
                         invoice_lines_attributes: updatedItems,

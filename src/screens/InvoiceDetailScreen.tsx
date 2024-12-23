@@ -159,6 +159,16 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
     setEditableInvoice({
       ...invoice,
       customer_id: invoice.customer_id ?? undefined,
+      invoice_lines_attributes: invoice.invoice_lines?.map((line) => ({
+        id: line.id,
+        product_id: line.product_id,
+        label: line.label,
+        quantity: line.quantity,
+        unit: line.unit,
+        vat_rate: line.vat_rate,
+        price: line.price,
+        tax: line.tax,
+      })),
     })
 
     setModalVisible(true)
