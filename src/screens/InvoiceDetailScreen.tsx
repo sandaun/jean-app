@@ -158,7 +158,9 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
   const buttonDisabled = invoiceFinalized || invoicePaid
 
   const handleOpenModal = () => {
-    if (!invoice) return
+    if (!invoice) {
+      return
+    }
 
     setEditableInvoice({
       ...invoice,

@@ -52,7 +52,9 @@ const InvoiceModalCreate: React.FC<InvoiceModalCreateProps> = ({
   )
 
   const handleAddItem = () => {
-    if (!newItem.label) return
+    if (!newItem.label) {
+      return
+    }
 
     setInvoice((prev) => {
       const existingLineIndex = prev.invoice_lines_attributes?.findIndex(
