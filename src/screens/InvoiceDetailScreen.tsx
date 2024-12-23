@@ -143,7 +143,11 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loader}>
-          <ActivityIndicator size="large" color="#007bff" />
+          <ActivityIndicator
+            size="large"
+            color="#007bff"
+            testID="loading-indicator"
+          />
         </View>
       </SafeAreaView>
     )
