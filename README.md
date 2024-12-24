@@ -1,90 +1,128 @@
 # Jean Test Mobile
 
-This repository contains instructions for the React Native hiring test, as well as a bootstrapped React Native app with which to start.
+## Description
 
-## Your mission
+Jean Test Mobile is a React Native application prototype designed for managing invoices. It connects to a REST API to list, create, and manage invoices.
 
-> ***Implement an invoicing app with React Native***
+## Features
 
-### Objectives
+### Core Features
 
-The goal is to leverage an existing REST HTTP API to build the prototype of an invoicing app.
+1. **Invoice List**: View a list of invoices with details like customer name, total amount, and statuses (Paid, Finalized, Overdue).
+2. **Create Invoice**: Add new invoices with customers, products, deadlines, and invoice lines.
+3. **Manage Invoice**:
+   - Edit invoice details and lines.
+   - Finalize invoices (mark as completed and uneditable except for payment status).
+   - Delete invoices.
 
-This prototype allows users to perform simple actions around their invoices:
-- List existing invoices with relevant details
-- Create new invoices
-- Manage existing invoices
-  - Finalize invoices
-  - Delete invoices
+### Advanced Features (Future Improvements)
 
-We do not expect the prototype to be feature-rich as we'll mainly focus on code quality, performance & user experience.
-We expect you to adopt standard coding practices & setup, including testing, as if you were working on a real application with other coworkers.
+- **Filtering and Sorting**: Add filters for customers, dates, and payment status.
+- **Enhanced Navigation**: Improve user navigation through deep linking and better routing.
+- **Offline Mode**: Cache invoice data for offline viewing and editing.
+- **Analytics**: Include insights such as total revenue or outstanding payments.
+- **Integration with External Systems**: Synchronize invoices with accounting software.
 
-Feel free to use pre-installed dependencies or add new ones if you have a legitimate use of them.
+## Technology Stack
 
-Please take the time to identify advanced features that could be added in the future & write down tech improvements/ideas you could work on.
+- **Framework**: React Native (v0.72.6)
+- **State Management**: React Context API
+- **API Client**: `openapi-client-axios`
+- **Testing**: Jest and React Native Testing Library
+- **Styling**: React Native Stylesheets
 
-For each feature/tech improvement, we want to understand:
-- What led you to think about this
-- Why it would be useful
-- What might be missing for you to implement it (API limitations, technical constraints)
+## Getting Started
 
-### Deliverable
+### Prerequisites
 
-- Create a private GitHub repository containing the source code of your application
-- Invite the following GitHub users to it: `@julienpinquie` `@soyoh` `@LucaGaspa` `@greeeg` 
+- **Node.js**: >=16
+- **Yarn**: Package manager
+- **React Native CLI**: For running the app on emulators or devices
 
-## What you're working with
+### Installation
 
-Please note that we rely on [`asdf`](https://github.com/asdf-vm/asdf) to manage Ruby/Node/Yarn versions. Feel free to use something else & have a look at `.tool-versions` if you run in any trouble.
+1. Clone the repository:
+   ```bash
+   git clone git@github.com:pennylane-hq/jean_test_mobile.git
+   cd jean_test_mobile
+   ```
+2. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   ```
+   Add your `X-SESSION` token to the `.env` file.
+3. Install dependencies:
+   ```bash
+   yarn install
+   ```
+4. Run the application:
+   - iOS: `yarn ios`
+   - Android: `yarn android`
 
-### Getting started
+## API Integration
 
-```sh
-git clone git@github.com:pennylane-hq/jean_test_mobile.git
+### Overview
 
-cd jean_test_mobile
+The application communicates with the Jean Test API available at `https://jean-test-api.herokuapp.com`. An OpenAPI definition for this API is provided and used to generate TypeScript types and an API client.
 
-bin/pull
+### API Resources
 
-# Make sure to add your token (sent by email)
-cp .env.example .env
+- **Customers**: List and search customers.
+- **Products**: List and search products.
+- **Invoices**: CRUD operations for invoices.
+- **Invoice Lines**: Add, update, or delete invoice lines via their associated invoice.
 
-yarn start
+### API Client Usage
 
-yarn ios
-```
-
-### Data model
-
-The REST API contains 4 resources: customers, products, invoices & invoice lines.
-
-Side notes:
-- Invoices contain multiple invoice lines.
-- Invoice lines are accessed via their invoice. To update them, use the relevant invoice API endpoints.
-- Once the `finalized` field is set to `true` for invoices, no field may be modified except for `paid`.
-
-The REST API base URL is `https://jean-test-api.herokuapp.com/`.
-Each API call must be authenticated using a `X-SESSION` header with the provided token.
-
-An OpenAPI definition for this REST API is avaible [here](https://jean-test-api.herokuapp.com/api-docs/index.html).
-
-The invoices list endpoint supports a `filter` query param which can be used as described in [our external API documentation](https://pennylane.readme.io/docs/how-to-set-up-filters).
-
-### API client
-
-An API client based on `openapi-client-axios` is available through a React Context set up in `src/api/index.tsx`. The provider is mounted in `src/App.tsx` & the context can be consumed using the `useApi` hook from `src/api/index.tsx`.
+The API client is integrated via a React Context and can be accessed with the `useApi` hook.
 
 ```tsx
+import { useApi } from './api';
+
 const MyComponent = () => {
-  const apiClient = useApi()
+  const apiClient = useApi();
 
   useEffect(() => {
     apiClient.getInvoices().then(res => {
-      // Do something...
-    })
-  }, [apiClient])
+      console.log(res.data);
+    });
+  }, [apiClient]);
 
-  return null
-}
+  return null;
+};
 ```
+
+## Testing
+
+The project includes a robust testing setup:
+
+1. **Unit Tests**: Validate component functionality using Jest.
+2. **Integration Tests**: Verify end-to-end workflows.
+
+Run all tests with:
+```bash
+yarn test
+```
+
+## File Structure
+
+### Key Directories
+
+- **`src/components`**: Contains reusable UI components.
+- **`src/screens`**: Screen components for navigation.
+- **`src/services/invoices`**: API service hooks for invoices.
+- **`src/api`**: API client setup.
+- **`src/constants`**: Centralized constants for shared values.
+- **`src/navigation`**: Navigation setup using React Navigation.
+- **`src/utils`**: Utility functions for calculations and formatting.
+
+### Important Files
+
+- **`AppNavigator.tsx`**: Defines app navigation structure.
+- **`InvoicesList.tsx`**: Lists all invoices.
+- **`InvoiceDetailScreen.tsx`**: Displays detailed information for a single invoice.
+- **`InvoiceModalCreate.tsx`**: Modal for creating invoices.
+- **`InvoiceModalUpdate.tsx`**: Modal for editing invoices.
+- **`DateTimePicker.tsx`**: Custom date picker component.
+- **`StatusPills.tsx`**: Visual indicators for invoice statuses.
+- **`Header.tsx`**: Custom header component.
