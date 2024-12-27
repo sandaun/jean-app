@@ -125,6 +125,9 @@ jest.mock('../../services/invoices/useInvoices', () => ({
     data: [],
     isLoading: false,
   }),
+  useFinalizeInvoice: jest.fn().mockReturnValue({
+    mutateAsync: jest.fn().mockResolvedValueOnce({}),
+  }),
 }))
 
 describe('InvoiceDetailScreen', () => {

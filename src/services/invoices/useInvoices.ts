@@ -84,12 +84,12 @@ export const useUpdateInvoice = () => {
         { invoice: updatedInvoice },
       )
     },
-    onSuccess: (_, invoiceId) => {
+    onSuccess: (_, updatedInvoice) => {
       queryClient.invalidateQueries({
         queryKey: ['invoices'],
       })
       queryClient.invalidateQueries({
-        queryKey: ['invoices', invoiceId] as const,
+        queryKey: ['invoice', updatedInvoice.id],
       })
     },
   })
@@ -129,12 +129,12 @@ export const useFinalizeInvoice = () => {
         },
       )
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({
         queryKey: ['invoices'],
       })
       queryClient.invalidateQueries({
-        queryKey: ['invoice', variables],
+        queryKey: ['invoice', id],
       })
     },
   })

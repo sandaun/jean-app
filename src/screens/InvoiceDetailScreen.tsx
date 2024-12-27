@@ -25,6 +25,7 @@ import { getInitialUpdateInvoice } from '../constants/constants'
 import {
   useDeleteInvoice,
   useFetchInvoiceById,
+  useFinalizeInvoice,
   useUpdateInvoice,
 } from '../services/invoices/useInvoices'
 import { Components } from '../api/generated/client'
@@ -58,6 +59,7 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
 
   const deleteInvoiceMutation = useDeleteInvoice()
   const updateInvoiceMutation = useUpdateInvoice()
+  const finalizeInvoiceMutation = useFinalizeInvoice()
 
   const handleDelete = () => {
     Alert.alert(
@@ -136,6 +138,16 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
     } catch (error) {
       console.error('Error updating invoice:', error)
       Alert.alert('Error', 'Failed to update the invoice.')
+    }
+  }
+
+  const handleFinalizeInvoice = async () => {
+    try {
+      await finalizeInvoiceMutation.mutateAsync(invoiceId)
+      Alert.alert('Success', 'Invoice finalized successfully.')
+    } catch (error) {
+      console.error('Error finalizing invoice:', error)
+      Alert.alert('Error', 'Failed to finalize the invoice.')
     }
   }
 
@@ -237,15 +249,7 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
         </View>
         <View style={styles.actions}>
           <TouchableOpacity
-            onPress={() =>
-              handleSaveInvoice(
-                {
-                  ...invoice,
-                  customer_id: invoice.customer_id ?? undefined,
-                },
-                invoice.invoice_lines,
-              )
-            }
+            onPress={handleFinalizeInvoice}
             style={[
               styles.finalizeButton,
               buttonDisabled && styles.buttonDisabled,
@@ -271,6 +275,7 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = ({
             visible={modalVisible}
             invoice={editableInvoice}
             setInvoice={setEditableInvoice}
+            isAlreadyFinalized={invoice.finalized}
             onClose={() => setModalVisible(false)}
             onSave={(updatedInvoice) =>
               handleSaveInvoice(updatedInvoice, invoice.invoice_lines)

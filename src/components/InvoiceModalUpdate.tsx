@@ -26,6 +26,7 @@ import {
 interface InvoiceModalUpdateProps {
   visible: boolean
   invoice: Components.Schemas.InvoiceUpdatePayload
+  isAlreadyFinalized: boolean
   onClose: () => void
   onSave: (invoice: Components.Schemas.InvoiceUpdatePayload) => void
   setInvoice: React.Dispatch<
@@ -41,6 +42,7 @@ const InvoiceModalUpdate: React.FC<InvoiceModalUpdateProps> = ({
   onSave,
   setInvoice,
   title,
+  isAlreadyFinalized,
 }) => {
   const [newItem, setNewItem] =
     useState<Components.Schemas.InvoiceLineUpdatePayload>(
@@ -238,10 +240,12 @@ const InvoiceModalUpdate: React.FC<InvoiceModalUpdateProps> = ({
               <CustomCheckbox
                 label="Finalized"
                 checked={invoice.finalized ?? false}
-                onChange={(value) =>
-                  setInvoice({ ...invoice, finalized: value })
-                }
-                disabled={invoice.finalized}
+                onChange={(value) => {
+                  if (!isAlreadyFinalized) {
+                    setInvoice({ ...invoice, finalized: value })
+                  }
+                }}
+                disabled={isAlreadyFinalized}
               />
             </View>
 

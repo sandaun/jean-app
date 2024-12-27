@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   FlatList,
   Text,
@@ -56,8 +56,8 @@ const InvoicesList = () => {
     setModalVisible(false)
   }
 
-  const renderItem = ({ item }: { item: InvoiceWithCustomer }) => {
-    return (
+  const renderItem = useMemo(() => {
+    return ({ item }: { item: InvoiceWithCustomer }) => (
       <TouchableOpacity
         onPress={() =>
           navigation.navigate('InvoiceDetail', { invoiceId: item.id })
@@ -87,7 +87,7 @@ const InvoicesList = () => {
         </View>
       </TouchableOpacity>
     )
-  }
+  }, [navigation])
 
   return (
     <SafeAreaView style={styles.safeArea}>
